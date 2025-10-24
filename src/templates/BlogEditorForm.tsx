@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Block, BlockType } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import BlockEditor from "./BlockEditor";
-import axios from "axios";
 import { FaClock } from "react-icons/fa";
+import axiosInstance from "@/utils/axiosInstance";
 
 interface Props {
+  blogId?: string;
   title: string;
   setTitle: (v: string) => void;
   summary: string;
@@ -14,8 +15,6 @@ interface Props {
   setTags: (v: string) => void;
   categories: string;
   setCategories: (v: string) => void;
-  author: string;
-  setAuthor: (v: string) => void;
   publishedOn: string;
   setPublishedOn: (v: string) => void;
   coverPreview: string | null;
@@ -24,6 +23,13 @@ interface Props {
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
   estimatedReadTime: string;
   setEstimatedReadTime: (v: string) => void;
+  // ✅ seo fields
+  slug: string;
+  setSlug: (v: string) => void;
+  metaTitle: string;
+  setMetaTitle: (v: string) => void;
+  metaDescription: string;
+  setMetaDescription: (v: string) => void;
 }
 
 const blockOptions: { label: string; value: BlockType }[] = [
@@ -39,6 +45,7 @@ const blockOptions: { label: string; value: BlockType }[] = [
 ];
 
 export default function BlogEditorForm({
+  blogId,
   title,
   setTitle,
   summary,
@@ -47,8 +54,6 @@ export default function BlogEditorForm({
   setTags,
   categories,
   setCategories,
-  author,
-  setAuthor,
   publishedOn,
   setPublishedOn,
   coverPreview,
@@ -57,6 +62,12 @@ export default function BlogEditorForm({
   setBlocks,
   estimatedReadTime,
   setEstimatedReadTime,
+  slug,
+  setSlug,
+  metaTitle,
+  setMetaTitle,
+  metaDescription,
+  setMetaDescription
 }: Props) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
@@ -122,64 +133,65 @@ export default function BlogEditorForm({
     });
   };
 
-  // ✅ Form submit
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!coverFile) {
-      console.log("No cover file selected");
-      return;
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("summary", summary || "");
+  formData.append("tags", JSON.stringify(tags.split(",").map((t) => t.trim())));
+  formData.append(
+    "categories",
+    JSON.stringify(categories.split(",").map((t) => t.trim()))
+  );
+  // formData.append("author", author || "");
+  formData.append("estimatedReadTime", estimatedReadTime || "0");
+
+  //seo fields
+  formData.append("slug", slug);
+  formData.append("metaTitle", metaTitle);
+  formData.append("metaDescription", metaDescription);
+
+  if (coverFile)
+    formData.append("coverImage", coverFile, coverFile.name);
+
+  Object.entries(imageFiles).forEach(([_, file]) => {
+    formData.append("images", file, file.name);
+  });
+
+  const blocksData = blocks.map((b) => {
+    if (b.type === "image") {
+      return {
+        ...b,
+        data: { ...b.data, url: imagePreviews[b.id] || b.data.url || "" },
+      };
     }
+    return b;
+  });
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("summary", summary || "");
-    formData.append("tags", JSON.stringify(tags.split(",").map((t) => t.trim())));
-    formData.append(
-      "categories",
-      JSON.stringify(categories.split(",").map((t) => t.trim()))
-    );
-    formData.append("author", author || "");
-    formData.append("estimatedReadTime", estimatedReadTime || "0");
+  formData.append("blocks", JSON.stringify(blocksData));
 
-    if (coverFile)
-      formData.append("coverImage", coverFile, coverFile.name);
-
-    Object.entries(imageFiles).forEach(([_, file]) => {
-      formData.append("images", file, file.name);
-    });
-
-    const blocksData = blocks.map((b) => {
-      if (b.type === "image") {
-        return {
-          ...b,
-          data: {
-            ...b.data,
-            url: imagePreviews[b.id] || b.data.url || "",
-          },
-        };
-      }
-      if (b.type === "video") {
-        return {
-          ...b,
-          data: { ...b.data, url: b.data.url || "" },
-        };
-      }
-      return b;
-    });
-
-    formData.append("blocks", JSON.stringify(blocksData));
-
-    try {
-      const res = await axios.post("http://localhost:5000/api/blogs", formData, {
+  try {
+    let res;
+    if (blogId) {
+      // ✏️ Edit existing blog
+      res = await axiosInstance.put(`http://localhost:5000/api/blogs/${blogId}`, formData, {
+        headers: { "x-blog-key": "supersecret123" },
+      });
+      alert("✅ Blog updated successfully!");
+    } else {
+      // 🆕 Create new blog
+      res = await axiosInstance.post("http://localhost:5000/api/blogs", formData, {
         headers: { "x-blog-key": "supersecret123" },
       });
       alert("✅ Blog created successfully!");
-      console.log(res.data);
-    } catch (err) {
-      console.error("❌ Blog create error:", err);
-      alert("Error creating blog.");
     }
-  };
+  } catch (err) {
+    console.error("❌ Blog submit error:", err);
+    alert("Error submitting blog.");
+  }
+};
+
 
   return (
     <form
@@ -211,12 +223,12 @@ export default function BlogEditorForm({
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
-        <input
+        {/* <input
           placeholder="Author"
           className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-        />
+        /> */}
       </div>
 
       {/* 📚 Categories + 📅 Published On */}
@@ -254,6 +266,31 @@ export default function BlogEditorForm({
             />
           )}
         </div>
+        <div className="space-y-4">
+  {/* 🧩 Slug */}
+  <input
+    placeholder="Slug (leave empty to auto-generate from title)"
+    className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+    value={slug}
+    onChange={(e) => setSlug(e.target.value)}
+  />
+
+  {/* 🌐 Meta Title */}
+  <input
+    placeholder="Meta Title (used for SEO page title)"
+    className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+    value={metaTitle}
+    onChange={(e) => setMetaTitle(e.target.value)}
+  />
+
+  {/* 📝 Meta Description */}
+  <textarea
+    placeholder="Meta Description (used for SEO snippet)"
+    className="w-full border p-3 rounded-xl h-28 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    value={metaDescription}
+    onChange={(e) => setMetaDescription(e.target.value)}
+  />
+</div>
       </div>
 
       {/* ➕ Block Options */}

@@ -1,9 +1,14 @@
-import '../styles/global.css';
+import "../styles/global.css";
+import type { AppProps } from "next/app";
+import { AuthProvider } from "@/utils/AuthContext";
+import { ProtectedRoute } from "@/utils/ProtectedRoute";
 
-import type { AppProps } from 'next/app';
-
-const MyApp = ({ Component, pageProps }: AppProps) => (
-  <Component {...pageProps} />
-);
-
-export default MyApp;
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <AuthProvider>
+      <ProtectedRoute>
+        <Component {...pageProps} />
+      </ProtectedRoute>
+    </AuthProvider>
+  );
+}

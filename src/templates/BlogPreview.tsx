@@ -3,7 +3,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Block } from "../types";
 import { GrInspect } from "react-icons/gr";
 import { CiCalendarDate } from "react-icons/ci";
-import axios from "axios";
+import Head from "next/head";
+import axiosInstance from "@/utils/axiosInstance";
 
 interface BlogPreviewProps {
   title: string;
@@ -15,14 +16,25 @@ interface BlogPreviewProps {
   publishedOn: string;
   coverPreview: string | null;
   blocks: Block[];
+  slug: string;
+  metaTitle: string;
+  setMetaTitle: (v: string) => void;
+  metaDescription: string;
+  setMetaDescription: (v: string) => void;
 }
 
 interface RecentBlog {
   _id: string;
   title: string;
   coverImage: string;
-  author: string;
+  author: {
+    fullName: string;
+    userName: string;
+    profilePic: string;
+    employeeId: string;
+  };
   createdAt: string;
+  slug: string;
 }
 
 export default function BlogPreview({
@@ -35,11 +47,16 @@ export default function BlogPreview({
   coverPreview,
   estimatedReadTime,
   blocks,
+  slug,
+  metaTitle,
+  setMetaTitle,
+  metaDescription,
+  setMetaDescription
 }: BlogPreviewProps) {
   const [activeSection, setActiveSection] = useState<string>("");
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
-
   // Generate section index
+
   const sectionIndex = useMemo(
     () =>
       blocks
@@ -76,80 +93,6 @@ export default function BlogPreview({
   React.useEffect(() => {
     if (typeof window === "undefined") return; // SSR safety
 
-    if (!sectionIndex || sectionIndex.length === 0) return;
-
-    // Get heading elements
-    const headingEls = sectionIndex
-      .map((s) => document.getElementById(s.id))
-      .filter((el): el is HTMLElement => el !== null);
-
-    if (headingEls.length === 0) return;
-
-    // Scroll handler fallback (nearest to reference point)
-    const referenceY = 100; // px from top
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        let nearestId = "";
-        let minDistance = Infinity;
-
-        headingEls.forEach((el) => {
-          const rect = el.getBoundingClientRect();
-          const diff = Math.abs(rect.top - referenceY);
-          if (diff < minDistance) {
-            minDistance = diff;
-            nearestId = el.id;
-          }
-        });
-
-        if (nearestId) setActiveSection(nearestId);
-        ticking = false;
-      });
-    };
-
-    // IntersectionObserver for better performance and accuracy
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible: IntersectionObserverEntry[] = entries.filter(
-          (entry) => entry.isIntersecting
-        );
-
-        if (visible.length > 0) {
-          visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-          const topVisible = visible[0];
-          if (topVisible?.target instanceof HTMLElement) {
-            setActiveSection(topVisible.target.id);
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: "-40% 0px -55% 0px", // adjust as needed for sticky headers
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      }
-    );
-
-    headingEls.forEach((el) => observer.observe(el));
-
-    // Attach scroll listener
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    // run once to set initial active section
-    handleScroll();
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      headingEls.forEach((el) => observer.unobserve(el));
-      observer.disconnect();
-    };
-  }, [sectionIndex]);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return; // SSR safety
-
     const progressBar = document.getElementById("scroll-progress");
     if (!progressBar) return;
 
@@ -172,7 +115,7 @@ export default function BlogPreview({
   useEffect(() => {
     const fetchRecentBlogs = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/blogs?page=1&limit=4&sortBy=title&sortOrder=asc", {
+        const res = await axiosInstance.get("http://localhost:5000/api/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc", {
           headers: {
             "Content-Type": "application/json",
           },
@@ -186,11 +129,77 @@ export default function BlogPreview({
     fetchRecentBlogs();
   }, []);
 
-
-
   return (
     <>
-      <div className="fixed top-[10rem] left-0 w-full h-1 bg-gray-200 z-40">
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>{metaTitle || title}</title>
+        <meta name="description" content={metaDescription || summary} />
+        <link
+          rel="canonical"
+          href={`https://yourdomain.com/blog/${slug}`}
+        />
+
+        {/* Open Graph */}
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={metaTitle || title} />
+        <meta property="og:description" content={metaDescription || summary} />
+        <meta property="og:url" content={`https://yourdomain.com/blog/${slug}`} />
+        <meta property="og:site_name" content="Your Site Name" />
+        <meta
+          property="article:modified_time"
+          content={new Date().toISOString()}
+        />
+        {coverPreview && <meta property="og:image" content={coverPreview} />}
+
+        {/* Favicon */}
+        <link
+          rel="icon"
+          href="https://yourdomain.com/assets/image/icon/favicon.ico"
+          type="image/x-icon"
+        />
+        <link
+          rel="icon"
+          href="https://yourdomain.com/assets/image/icon/favicon192X192.png"
+          sizes="32x32"
+        />
+        <link
+          rel="icon"
+          href="https://yourdomain.com/assets/image/icon/favicon180X180.png"
+          sizes="192x192"
+        />
+
+        {/* External CSS */}
+        <link
+          rel="stylesheet"
+          href="https://transafeservices.com/assets/vendor/fontawesome/css/all.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://transafeservices.com/assets/vendor/bootstrap.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://transafeservices.com/assets/vendor/owl.carousel.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://transafeservices.com/assets/vendor/owl.theme.default.min.css"
+        />
+        <link
+          href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://transafeservices.com/assets/css/main.css?v=0.0.2"
+        />
+      </Head>
+
+      <div className="fixed top-[13.5rem] left-0 w-full h-1 bg-gray-200 z-40">
         <div
           id="scroll-progress"
           className="h-1 bg-red-600 w-0 transition-[width] duration-150 ease-out"
@@ -202,7 +211,7 @@ export default function BlogPreview({
           <aside
             className="hidden lg:block w-1/5 px-4 sticky"
             style={{
-              top: "200px", // Adjust this if your navbar height changes
+              top: "200px",
               alignSelf: "flex-start",
               height: "calc(100vh - 150px)",
               overflowY: "auto",
@@ -210,7 +219,7 @@ export default function BlogPreview({
           >
             <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-sm p-4">
               <h3 className="text-[#074B83] font-semibold mb-3 uppercase tracking-widest text-sm sticky top-0 bg-white/90 backdrop-blur-md py-1 z-10">
-                Contents
+                Table Of Contents
               </h3>
 
               <ul className="space-y-2 text-gray-700">
@@ -218,32 +227,37 @@ export default function BlogPreview({
                   <li
                     key={sec.id}
                     className={`flex items-center gap-2 cursor-pointer px-2 py-1 rounded-md transition-all ${activeSection === sec.id
-                      ? "bg-[#EE222F]/10 text-[#EE222F] font-medium"
+                      ? ""
                       : "hover:text-[#074B83]"
                       }`}
                     style={{ marginLeft: `${(sec.level - 1) * 12}px` }}
-                    onClick={() =>
-                      document
-                        .getElementById(sec.id)
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
                   >
-                    {/* 🔹 Bullet circle */}
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{
-                        backgroundColor:
-                          activeSection === sec.id ? "#EE222F" : "#074B83",
-                        transition: "background-color 0.2s ease",
-                      }}
                     ></span>
-
-                    {/* Section text */}
                     <span>{sec.text}</span>
                   </li>
                 ))}
               </ul>
             </div>
+
+            {/* Scrollbar Styling */}
+            <style jsx>{`
+      aside::-webkit-scrollbar {
+        width: 8px;
+      }
+      aside::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      aside::-webkit-scrollbar-thumb {
+        background-color: #074B83;
+        border-radius: 10px;
+      }
+      aside::-webkit-scrollbar-thumb:hover {
+        background-color: #074B83;
+      }
+    `}</style>
           </aside>
         )}
 
@@ -311,7 +325,7 @@ export default function BlogPreview({
           )}
 
           {/* Tags */}
-          {tags && (
+          {/* {tags && (
             <div className="flex flex-wrap justify-center gap-2">
               {tags
                 .split(",")
@@ -324,24 +338,31 @@ export default function BlogPreview({
                   </span>
                 ))}
             </div>
-          )}
+          )} */}
           <div className="bg-white rounded-3xl shadow-lg p-10 space-y-8">
             {blocks.map((block) => (
               <div key={block.id} id={block.id} className="scroll-mt-28">
                 {block.type === "heading" && (
                   <>
                     {block.data.level === 1 ? (
-                      <h1 className="text-3xl font-bold mt-8 mb-4 border-b-2 border-[#EE222F]/40 pb-2">
+                      <h1 className="text-4xl font-bold mt-8 mb-4 border-b-2 border-[#EE222F]/40 pb-2">
                         {block.data.text}
                       </h1>
                     ) : block.data.level === 2 ? (
-                      <h2 className="text-2xl font-semibold mt-6 mb-3 text-[#074B83]">
+                      <h2 className="text-3xl font-bold mt-6 mb-3">
                         {block.data.text}
                       </h2>
-                    ) : (
-                      <h3 className="text-xl font-medium mt-4 mb-2 text-gray-700">
+                    ) :
+                    block.data.level === 3 ? (
+                      <h3 className="text-2xl font-bold mt-6 mb-3">
                         {block.data.text}
                       </h3>
+                    ) :
+                     (
+                      <h4 className="text-xl font-bold mt-4 mb-2">
+                        {block.data.text}
+                      </h4>
+
                     )}
                   </>
                 )}
@@ -362,6 +383,9 @@ export default function BlogPreview({
 
                 {block.type === "faq" && (
                   <div className="my-4 space-y-2">
+                    <h2 id="faqs" className="text-2xl font-bold text-red-500 mt-8 mb-4">
+                      FAQ's
+                    </h2>
                     {block.data.faqs?.map((faq, idx) => (
                       <div key={idx} className="border rounded-lg p-3 bg-gray-50">
                         <p className="font-semibold">{faq.question}</p>
@@ -471,21 +495,22 @@ export default function BlogPreview({
           }}
         >
           <style jsx>{`
-            aside::-webkit-scrollbar {
-              width: 8px;
-            }
-            aside::-webkit-scrollbar-track {
-              background: #f1f1f1;
-              border-radius: 10px;
-            }
-            aside::-webkit-scrollbar-thumb {
-              background-color: #074B83;
-              border-radius: 10px;
-            }
-            aside::-webkit-scrollbar-thumb:hover {
-              background-color: #074B83;
-            }
-          `}</style>
+              aside::-webkit-scrollbar {
+                width: 8px;
+              }
+              aside::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+              }
+              aside::-webkit-scrollbar-thumb {
+                background-color: #074B83;
+                border-radius: 10px;
+              }
+              aside::-webkit-scrollbar-thumb:hover {
+                background-color: #074B83;
+              }
+          `}
+          </style>
 
           <h3 className="text-[#EE222F] font-semibold mb-4 text-lg">
             Recent Blogs
@@ -495,7 +520,7 @@ export default function BlogPreview({
               <div
                 key={blog._id}
                 className="bg-white border border-gray-100 rounded-2xl p-4 cursor-pointer group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                onClick={() => (window.location.href = `/blog/${blog._id}`)}
+                onClick={() => (window.location.href = `/blog/${blog?.slug}`)}
               >
                 <div className="h-32 bg-gray-100 rounded-xl mb-3 overflow-hidden">
                   <img
@@ -509,7 +534,7 @@ export default function BlogPreview({
                 </h4>
                 <p className="text-sm text-gray-500">
                   {new Date(blog.createdAt).toLocaleDateString()} • by{" "}
-                  {blog.author}
+                  {blog.author?.fullName}
                 </p>
               </div>
             ))}
