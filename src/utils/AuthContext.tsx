@@ -1,10 +1,12 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useRouter } from "next/router";
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
 import axiosInstance from "./axiosInstance";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  login: (userName: string, password: string) => Promise<void>;
+  login: (_userName: string, _password: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -34,7 +36,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (userName: string, password: string) => {
     try {
-      const response = await axiosInstance.post("/auth/login", { userName, password });
+      const response = await axiosInstance.post("/auth/login", {
+        userName,
+        password,
+      });
       if (response.status === 200) {
         setIsLoggedIn(true);
         router.push("/");
@@ -65,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout(); // Logout user if refresh also fails
       }
       return Promise.reject(err);
-    }
+    },
   );
 
   return (

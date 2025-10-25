@@ -23,7 +23,7 @@ axiosInstance.interceptors.response.use(
         // Try refreshing token
         await axiosInstance.post("/auth/refresh-token", {});
         // Retry the original request
-        return axiosInstance(originalRequest);
+        return await axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
         // If refresh fails, clear cookies and redirect to login (handled in AuthContext)
@@ -31,8 +31,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;
-

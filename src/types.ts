@@ -23,7 +23,7 @@ export interface FAQItem {
 }
 
 export interface Block {
-  id: string; 
+  id: string;
   type: BlockType;
   data: {
     text?: string;
@@ -52,7 +52,6 @@ export interface BlogType {
   createdAt: string;
   updatedAt: string;
   blocks: Block[];
-  publishedOn:string;
-  coverPreview:any;
+  publishedOn: string;
+  coverPreview: any;
 }
-

@@ -1,17 +1,32 @@
 /* eslint-disable import/no-extraneous-dependencies */
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
 });
 
 module.exports = withBundleAnalyzer({
   eslint: {
-    dirs: ['.'],
+    dirs: ["."],
   },
   poweredByHeader: false,
   trailingSlash: true,
-  basePath: '',
+  basePath: "",
   // The starter code load resources from `public` folder with `router.basePath` in React components.
   // So, the source code is "basePath-ready".
   // You can remove `basePath` if you don't need it.
   reactStrictMode: true,
+   images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5000", // your backend port
+        pathname: "/uploads/**", // match all images
+      },
+      {
+        protocol: "https",
+        hostname: "yourdomain.com",
+        pathname: "/**",
+      },
+    ],
+  },
 });

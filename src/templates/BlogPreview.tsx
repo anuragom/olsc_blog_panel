@@ -1,10 +1,14 @@
 // src/templates/BlogPreview.tsx
-import React, { useMemo, useState, useEffect } from "react";
-import { Block } from "../types";
-import { GrInspect } from "react-icons/gr";
-import { CiCalendarDate } from "react-icons/ci";
 import Head from "next/head";
+import React, { useEffect, useMemo, useState } from "react";
+import { CiCalendarDate } from "react-icons/ci";
+import { GrInspect } from "react-icons/gr";
+
 import axiosInstance from "@/utils/axiosInstance";
+
+import type { Block } from "../types";
+
+import Image from "next/image";
 
 interface BlogPreviewProps {
   title: string;
@@ -18,9 +22,9 @@ interface BlogPreviewProps {
   blocks: Block[];
   slug: string;
   metaTitle: string;
-  setMetaTitle: (v: string) => void;
+  setMetaTitle: (_v: string) => void;
   metaDescription: string;
-  setMetaDescription: (v: string) => void;
+  setMetaDescription: (_v: string) => void;
 }
 
 interface RecentBlog {
@@ -40,7 +44,7 @@ interface RecentBlog {
 export default function BlogPreview({
   title,
   summary,
-  tags,
+  // tags,
   categories,
   author,
   publishedOn,
@@ -49,11 +53,11 @@ export default function BlogPreview({
   blocks,
   slug,
   metaTitle,
-  setMetaTitle,
+  // setMetaTitle,
   metaDescription,
-  setMetaDescription
+  // setMetaDescription
 }: BlogPreviewProps) {
-  const [activeSection, setActiveSection] = useState<string>("");
+  const [activeSection] = useState<string>("");
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
   // Generate section index
 
@@ -66,9 +70,8 @@ export default function BlogPreview({
           text: b.data.text || "",
           level: b.data.level || 1,
         })),
-    [blocks]
+    [blocks],
   );
-
 
   function enhanceLinks(html: string) {
     if (!html) return "";
@@ -81,7 +84,7 @@ export default function BlogPreview({
         "text-blue-600",
         "hover:text-blue-800",
         "hover:underline",
-        "transition-colors"
+        "transition-colors",
       );
       link.setAttribute("target", "_blank");
       link.setAttribute("rel", "noopener noreferrer");
@@ -115,11 +118,14 @@ export default function BlogPreview({
   useEffect(() => {
     const fetchRecentBlogs = async () => {
       try {
-        const res = await axiosInstance.get("http://localhost:5000/api/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc", {
-          headers: {
-            "Content-Type": "application/json",
+        const res = await axiosInstance.get(
+          "http://localhost:5000/api/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc",
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
         setRecentBlogs(res.data.data);
       } catch (err) {
         console.error("Error fetching recent blogs:", err);
@@ -137,17 +143,17 @@ export default function BlogPreview({
 
         <title>{metaTitle || title}</title>
         <meta name="description" content={metaDescription || summary} />
-        <link
-          rel="canonical"
-          href={`https://yourdomain.com/blog/${slug}`}
-        />
+        <link rel="canonical" href={`https://yourdomain.com/blog/${slug}`} />
 
         {/* Open Graph */}
         <meta property="og:locale" content="en_US" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content={metaTitle || title} />
         <meta property="og:description" content={metaDescription || summary} />
-        <meta property="og:url" content={`https://yourdomain.com/blog/${slug}`} />
+        <meta
+          property="og:url"
+          content={`https://yourdomain.com/blog/${slug}`}
+        />
         <meta property="og:site_name" content="Your Site Name" />
         <meta
           property="article:modified_time"
@@ -199,17 +205,17 @@ export default function BlogPreview({
         />
       </Head>
 
-      <div className="fixed top-[13.5rem] left-0 w-full h-1 bg-gray-200 z-40">
+      <div className="fixed left-0 top-[13.5rem] z-40 h-1 w-full bg-gray-200">
         <div
           id="scroll-progress"
-          className="h-1 bg-red-600 w-0 transition-[width] duration-150 ease-out"
+          className="h-1 w-0 bg-red-600 transition-[width] duration-150 ease-out"
         ></div>
       </div>
-      <div className="relative flex flex-row min-h-screen font-sans bg-gradient-to-b from-[#F9FAFB] to-[#F3F4F6] text-gray-800">
+      <div className="relative flex min-h-screen flex-row bg-gradient-to-b from-[#F9FAFB] to-[#F3F4F6] font-sans text-gray-800">
         {/* Table of Contents */}
         {sectionIndex.length > 0 && (
           <aside
-            className="hidden lg:block w-1/5 px-4 sticky"
+            className="sticky hidden w-1/5 px-4 lg:block"
             style={{
               top: "200px",
               alignSelf: "flex-start",
@@ -217,8 +223,8 @@ export default function BlogPreview({
               overflowY: "auto",
             }}
           >
-            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-sm p-4">
-              <h3 className="text-[#074B83] font-semibold mb-3 uppercase tracking-widest text-sm sticky top-0 bg-white/90 backdrop-blur-md py-1 z-10">
+            <div className="rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur-xl">
+              <h3 className="sticky top-0 z-10 mb-3 bg-white/90 py-1 text-sm font-semibold uppercase tracking-widest text-[#074B83] backdrop-blur-md">
                 Table Of Contents
               </h3>
 
@@ -226,15 +232,11 @@ export default function BlogPreview({
                 {sectionIndex.map((sec) => (
                   <li
                     key={sec.id}
-                    className={`flex items-center gap-2 cursor-pointer px-2 py-1 rounded-md transition-all ${activeSection === sec.id
-                      ? ""
-                      : "hover:text-[#074B83]"
+                    className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 transition-all ${activeSection === sec.id ? "" : "hover:text-[#074B83]"
                       }`}
                     style={{ marginLeft: `${(sec.level - 1) * 12}px` }}
                   >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                    ></span>
+                    <span className="size-2 shrink-0 rounded-full"></span>
                     <span>{sec.text}</span>
                   </li>
                 ))}
@@ -243,43 +245,41 @@ export default function BlogPreview({
 
             {/* Scrollbar Styling */}
             <style jsx>{`
-      aside::-webkit-scrollbar {
-        width: 8px;
-      }
-      aside::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-      }
-      aside::-webkit-scrollbar-thumb {
-        background-color: #074B83;
-        border-radius: 10px;
-      }
-      aside::-webkit-scrollbar-thumb:hover {
-        background-color: #074B83;
-      }
-    `}</style>
+              aside::-webkit-scrollbar {
+                width: 8px;
+              }
+              aside::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+              }
+              aside::-webkit-scrollbar-thumb {
+                background-color: #074b83;
+                border-radius: 10px;
+              }
+              aside::-webkit-scrollbar-thumb:hover {
+                background-color: #074b83;
+              }
+            `}</style>
           </aside>
         )}
 
-
-
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto px-8 py-10 max-w-5xl mx-auto space-y-4">
+        <main className="mx-auto max-w-5xl flex-1 space-y-4 overflow-y-auto px-8 py-10">
           {/* Title */}
           {title && (
-            <h1 className="text-5xl md:text-6xl font-bold text-[#074B83] tracking-tight leading-snug mb-2">
+            <h1 className="mb-2 text-5xl font-bold leading-snug tracking-tight text-[#074B83] md:text-6xl">
               {title}
             </h1>
           )}
 
           {author && (
-            <div className="flex justify-between items-center text-gray-700 text-sm tracking-wide mb-6">
+            <div className="mb-6 flex items-center justify-between text-sm tracking-wide text-gray-700">
               <p>
                 By <span className="font-medium text-[#EE222F]">{author}</span>
               </p>
               {estimatedReadTime && (
                 <div className="flex flex-row items-center">
-                  <GrInspect className="text-[#074B83] mr-3 text-2xl" />
+                  <GrInspect className="mr-3 text-2xl text-[#074B83]" />
                   <p className="flex items-center gap-1">
                     {estimatedReadTime} min read
                   </p>
@@ -289,16 +289,15 @@ export default function BlogPreview({
           )}
 
           {categories && (
-            <div className="flex justify-between items-center text-gray-700 text-sm tracking-wide mb-6">
+            <div className="mb-6 flex items-center justify-between text-sm tracking-wide text-gray-700">
               <p>
-                Categories : <span className="font-medium text-[#EE222F]">{categories}</span>
+                Categories :{" "}
+                <span className="font-medium text-[#EE222F]">{categories}</span>
               </p>
               {publishedOn && (
                 <div className="flex flex-row items-center">
-                  <CiCalendarDate className="text-[#074B83] mr-3 text-2xl" />
-                  <p className="flex items-center gap-1">
-                    {publishedOn}
-                  </p>
+                  <CiCalendarDate className="mr-3 text-2xl text-[#074B83]" />
+                  <p className="flex items-center gap-1">{publishedOn}</p>
                 </div>
               )}
             </div>
@@ -306,19 +305,21 @@ export default function BlogPreview({
 
           {/* Cover Image */}
           {coverPreview && (
-            <div className="relative w-full rounded-3xl overflow-hidden shadow-md mb-8">
-              <img
+            <div className="relative mb-8 w-full h-[450px] overflow-hidden rounded-3xl shadow-md">
+              <Image
                 src={coverPreview}
                 alt="Cover"
-                className="w-full h-[450px] object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
             </div>
           )}
 
           {/* Summary */}
           {summary && (
-            <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-6 shadow text-center">
-              <p className="text-lg text-gray-700 italic leading-relaxed">
+            <div className="rounded-3xl border border-gray-100 bg-white/80 p-6 text-center shadow backdrop-blur-md">
+              <p className="text-lg italic leading-relaxed text-gray-700">
                 “{summary}”
               </p>
             </div>
@@ -339,41 +340,40 @@ export default function BlogPreview({
                 ))}
             </div>
           )} */}
-          <div className="bg-white rounded-3xl shadow-lg p-10 space-y-8">
+          <div className="space-y-8 rounded-3xl bg-white p-10 shadow-lg">
             {blocks.map((block) => (
               <div key={block.id} id={block.id} className="scroll-mt-28">
                 {block.type === "heading" && (
                   <>
                     {block.data.level === 1 ? (
-                      <h1 className="text-4xl font-bold mt-8 mb-4 border-b-2 border-[#EE222F]/40 pb-2">
+                      <h1 className="mb-4 mt-8 border-b-2 border-[#EE222F]/40 pb-2 text-4xl font-bold">
                         {block.data.text}
                       </h1>
                     ) : block.data.level === 2 ? (
-                      <h2 className="text-3xl font-bold mt-6 mb-3">
+                      <h2 className="mb-3 mt-6 text-3xl font-bold">
                         {block.data.text}
                       </h2>
-                    ) :
-                    block.data.level === 3 ? (
-                      <h3 className="text-2xl font-bold mt-6 mb-3">
+                    ) : block.data.level === 3 ? (
+                      <h3 className="mb-3 mt-6 text-2xl font-bold">
                         {block.data.text}
                       </h3>
-                    ) :
-                     (
-                      <h4 className="text-xl font-bold mt-4 mb-2">
+                    ) : (
+                      <h4 className="mb-2 mt-4 text-xl font-bold">
                         {block.data.text}
                       </h4>
-
                     )}
                   </>
                 )}
 
                 {block.type === "table" && (
-                  <table className="table-auto border-collapse w-full my-4">
+                  <table className="my-4 w-full table-auto border-collapse">
                     <tbody>
                       {block.data.rows?.map((row, rIdx) => (
                         <tr key={rIdx}>
                           {row.cells.map((cell, cIdx) => (
-                            <td key={cIdx} className="border p-2">{cell.text}</td>
+                            <td key={cIdx} className="border p-2">
+                              {cell.text}
+                            </td>
                           ))}
                         </tr>
                       ))}
@@ -383,13 +383,19 @@ export default function BlogPreview({
 
                 {block.type === "faq" && (
                   <div className="my-4 space-y-2">
-                    <h2 id="faqs" className="text-2xl font-bold text-red-500 mt-8 mb-4">
+                    <h2
+                      id="faqs"
+                      className="mb-4 mt-8 text-2xl font-bold text-red-500"
+                    >
                       FAQ's
                     </h2>
                     {block.data.faqs?.map((faq, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                      <div
+                        key={idx}
+                        className="rounded-lg border bg-gray-50 p-3"
+                      >
                         <p className="font-semibold">{faq.question}</p>
-                        <p className="text-gray-700 mt-1">{faq.answer}</p>
+                        <p className="mt-1 text-gray-700">{faq.answer}</p>
                       </div>
                     ))}
                   </div>
@@ -397,7 +403,7 @@ export default function BlogPreview({
 
                 {block.type === "paragraph" && (
                   <div
-                    className="text-gray-800 leading-relaxed"
+                    className="leading-relaxed text-gray-800"
                     dangerouslySetInnerHTML={{
                       __html: enhanceLinks(block.data.text ?? ""),
                     }}
@@ -406,7 +412,7 @@ export default function BlogPreview({
 
                 {/* Quote */}
                 {block.type === "quote" && (
-                  <blockquote className="border-l-4 border-[#EE222F]/60 pl-4 italic text-gray-700 bg-[#EE222F]/5 p-3 rounded-r">
+                  <blockquote className="rounded-r border-l-4 border-[#EE222F]/60 bg-[#EE222F]/5 p-3 pl-4 italic text-gray-700">
                     <div
                       dangerouslySetInnerHTML={{
                         __html: enhanceLinks(block.data.text ?? ""),
@@ -416,40 +422,43 @@ export default function BlogPreview({
                 )}
 
                 {block.type === "code" && (
-                  <pre className="bg-[#074B83] text-gray-100 p-4 rounded-xl font-mono text-sm overflow-x-auto">
+                  <pre className="overflow-x-auto rounded-xl bg-[#074B83] p-4 font-mono text-sm text-gray-100">
                     {block.data.text}
                   </pre>
                 )}
 
                 {block.type === "list" &&
                   (block.data.style === "unordered" ? (
-                    <ul className="list-disc ml-6 space-y-1">
+                    <ul className="ml-6 list-disc space-y-1">
                       {block.data.items?.map((i: string, idx: number) => (
                         <li key={idx}>{i}</li>
                       ))}
                     </ul>
                   ) : (
-                    <ol className="list-decimal ml-6 space-y-1">
+                    <ol className="ml-6 list-decimal space-y-1">
                       {block.data.items?.map((i: string, idx: number) => (
                         <li key={idx}>{i}</li>
                       ))}
                     </ol>
                   ))}
 
-                {block.type === "image" && (
-                  <figure className="my-6">
-                    <img
-                      src={block.data.preview ?? block.data.url}
+                {(block.data.preview || block.data.url) && (
+                  <div className="relative h-[400px] w-full">
+                    <Image
+                      src={block.data.preview || block.data.url!} // `!` tells TS it's definitely not undefined
                       alt={block.data.caption ?? ""}
-                      className="w-full rounded-2xl object-cover shadow hover:scale-[1.02] transition-transform duration-300"
+                      fill
+                      className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
+                      unoptimized
                     />
                     {block.data.caption && (
-                      <figcaption className="text-sm text-gray-500 mt-2 text-center italic">
+                      <figcaption className="mt-2 text-center text-sm italic text-gray-500">
                         {block.data.caption}
                       </figcaption>
                     )}
-                  </figure>
+                  </div>
                 )}
+
 
                 {block.type === "video" && (
                   <div className="my-6">
@@ -466,18 +475,20 @@ export default function BlogPreview({
                             title="YouTube video"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
-                            className="w-full h-[400px] rounded-2xl shadow"
+                            className="h-[400px] w-full rounded-2xl shadow"
                           />
                         </div>
                       ) : (
                         <video
                           src={block.data.url}
                           controls
-                          className="w-full max-h-96 rounded-2xl shadow"
+                          className="max-h-96 w-full rounded-2xl shadow"
                         />
                       )
                     ) : (
-                      <p className="text-gray-400 italic">No video URL provided</p>
+                      <p className="italic text-gray-400">
+                        No video URL provided
+                      </p>
                     )}
                   </div>
                 )}
@@ -488,13 +499,14 @@ export default function BlogPreview({
 
         {/* Right Sidebar: Recent Blogs */}
         <aside
-          className="hidden xl:block w-1/4 p-8 border-l border-gray-100 bg-white/70 backdrop-blur-lg shadow-inner sticky top-[6rem] h-[calc(100vh-6rem)] overflow-y-auto"
+          className="sticky top-[6rem] hidden h-[calc(100vh-6rem)] w-1/4 overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#074B83 #f1f1f1",
           }}
         >
-          <style jsx>{`
+          <style jsx>
+            {`
               aside::-webkit-scrollbar {
                 width: 8px;
               }
@@ -503,44 +515,54 @@ export default function BlogPreview({
                 border-radius: 10px;
               }
               aside::-webkit-scrollbar-thumb {
-                background-color: #074B83;
+                background-color: #074b83;
                 border-radius: 10px;
               }
               aside::-webkit-scrollbar-thumb:hover {
-                background-color: #074B83;
+                background-color: #074b83;
               }
-          `}
+            `}
           </style>
 
-          <h3 className="text-[#EE222F] font-semibold mb-4 text-lg">
+          <h3 className="mb-4 text-lg font-semibold text-[#EE222F]">
             Recent Blogs
           </h3>
           <div className="space-y-4">
             {recentBlogs.map((blog) => (
               <div
                 key={blog._id}
-                className="bg-white border border-gray-100 rounded-2xl p-4 cursor-pointer group transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="group cursor-pointer rounded-xl border border-gray-100 bg-white shadow-lg transition-transform hover:scale-105 hover:shadow-2xl overflow-hidden"
                 onClick={() => (window.location.href = `/blog/${blog?.slug}`)}
               >
-                <div className="h-32 bg-gray-100 rounded-xl mb-3 overflow-hidden">
-                  <img
-                    src={blog.coverImage}
-                    alt={blog.coverImage}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                {/* Image */}
+                <div className="relative h-32 w-full">
+                  <Image
+                    src={blog.coverImage ?? "/placeholder.png"}
+                    alt={blog.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    unoptimized
                   />
                 </div>
-                <h4 className="font-semibold text-gray-800 group-hover:text-[#074B83] transition">
-                  {blog.title}
-                </h4>
-                <p className="text-sm text-gray-500">
-                  {new Date(blog.createdAt).toLocaleDateString()} • by{" "}
-                  {blog.author?.fullName}
-                </p>
+
+                {/* Card Content */}
+                <div className="p-4 flex flex-col flex-1">
+                  <p className="text-blue-700 font-semibold text-sm mb-1">
+                    {/* You can optionally show category if available */}
+                    {blog?.author?.fullName || "Author"}
+                  </p>
+                  <h4 className="text-gray-800 font-semibold line-clamp-2 mb-1 text-base">
+                    {blog.title}
+                  </h4>
+                  <p className="text-gray-500 text-sm">
+                    {new Date(blog.createdAt).toLocaleDateString()} • by {blog.author?.fullName}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </aside>
 
+        </aside>
       </div>
     </>
   );

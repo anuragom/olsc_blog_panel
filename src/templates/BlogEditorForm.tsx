@@ -1,35 +1,39 @@
 import React, { useState } from "react";
-import { Block, BlockType } from "../types";
-import { v4 as uuidv4 } from "uuid";
-import BlockEditor from "./BlockEditor";
 import { FaClock } from "react-icons/fa";
+import { v4 as uuidv4 } from "uuid";
+
 import axiosInstance from "@/utils/axiosInstance";
+
+import type { Block, BlockType } from "../types";
+import BlockEditor from "./BlockEditor";
+
+import Image from "next/image";
 
 interface Props {
   blogId?: string;
   title: string;
-  setTitle: (v: string) => void;
+  setTitle: (_v: string) => void;
   summary: string;
-  setSummary: (v: string) => void;
+  setSummary: (_v: string) => void;
   tags: string;
-  setTags: (v: string) => void;
+  setTags: (_v: string) => void;
   categories: string;
-  setCategories: (v: string) => void;
+  setCategories: (_v: string) => void;
   publishedOn: string;
-  setPublishedOn: (v: string) => void;
+  setPublishedOn: (_v: string) => void;
   coverPreview: string | null;
-  setCoverPreview: (v: string | null) => void;
+  setCoverPreview: (_v: string | null) => void;
   blocks: Block[];
   setBlocks: React.Dispatch<React.SetStateAction<Block[]>>;
   estimatedReadTime: string;
-  setEstimatedReadTime: (v: string) => void;
+  setEstimatedReadTime: (_v: string) => void;
   // ✅ seo fields
   slug: string;
-  setSlug: (v: string) => void;
+  setSlug: (_v: string) => void;
   metaTitle: string;
-  setMetaTitle: (v: string) => void;
+  setMetaTitle: (_v: string) => void;
   metaDescription: string;
-  setMetaDescription: (v: string) => void;
+  setMetaDescription: (_v: string) => void;
 }
 
 const blockOptions: { label: string; value: BlockType }[] = [
@@ -67,48 +71,72 @@ export default function BlogEditorForm({
   metaTitle,
   setMetaTitle,
   metaDescription,
-  setMetaDescription
+  setMetaDescription,
 }: Props) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
-  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>(
+    {},
+  );
 
   // ➕ Add new block
+  // const addBlock = (type: BlockType) => {
+  //   const newBlock: Block = {
+  //     id: uuidv4(),
+  //     type,
+  //     data:
+  //       type === "list"
+  //         ? { items: [], style: "unordered" }
+  //         : type === "heading"
+  //         ? { text: "", level: 1 }
+  //         : type === "table"
+  //         ? { rows: [{ cells: [{ text: "" }] }] }
+  //         : type === "faq"
+  //         ? { faqs: [{ question: "", answer: "" }] }
+  //         : { text: "", url: "" },
+  //     _data: null, // ➕ Add _data to remove warning
+  //   };
+  //   setBlocks((prev) => [...prev, newBlock]);
+  // };
+
   const addBlock = (type: BlockType) => {
-    const newBlock: Block = {
-      id: uuidv4(),
-      type,
-      data:
-        type === "list"
-          ? { items: [], style: "unordered" }
-          : type === "heading"
-            ? { text: "", level: 1 }
-            : type === "table"
-              ? { rows: [{ cells: [{ text: "" }] }] }
-              : type === "faq"
-                ? { faqs: [{ question: "", answer: "" }] }
-                : { text: "", url: "" },
-    };
-    setBlocks((prev) => [...prev, newBlock]);
+  const newBlock: Block = {
+    id: uuidv4(),
+    type,
+    data:
+      type === "list"
+        ? { items: [], style: "unordered" }
+        : type === "heading"
+        ? { text: "", level: 1 }
+        : type === "table"
+        ? { rows: [{ cells: [{ text: "" }] }] }
+        : type === "faq"
+        ? { faqs: [{ question: "", answer: "" }] }
+        : { text: "", url: "" },
   };
+  setBlocks((prev) => [...prev, newBlock]);
+};
+
 
   // ✏️ Update block
-  const updateBlock = (id: string, data: any) =>
+  const updateBlock = (_id: string, _data: any) =>
     setBlocks((prevBlocks) =>
-      prevBlocks.map((b) => (b.id === id ? { ...b, data } : b))
+      prevBlocks.map((b) =>
+        b.id === _id ? { ...b, _data, data: _data } : b
+      ),
     );
 
   // 🗑️ Remove block
-  const removeBlock = (id: string) => {
-    setBlocks((prevBlocks) => prevBlocks.filter((b) => b.id !== id));
+  const removeBlock = (_id: string) => {
+    setBlocks((prevBlocks) => prevBlocks.filter((b) => b.id !== _id));
     setImageFiles((prev) => {
       const updated = { ...prev };
-      delete updated[id];
+      delete updated[_id];
       return updated;
     });
     setImagePreviews((prev) => {
       const updated = { ...prev };
-      delete updated[id];
+      delete updated[_id];
       return updated;
     });
   };
@@ -134,74 +162,75 @@ export default function BlogEditorForm({
   };
 
   const onSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("summary", summary || "");
-  formData.append("tags", JSON.stringify(tags.split(",").map((t) => t.trim())));
-  formData.append(
-    "categories",
-    JSON.stringify(categories.split(",").map((t) => t.trim()))
-  );
-  // formData.append("author", author || "");
-  formData.append("estimatedReadTime", estimatedReadTime || "0");
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("summary", summary || "");
+    formData.append(
+      "tags",
+      JSON.stringify(tags.split(",").map((t) => t.trim())),
+    );
+    formData.append(
+      "categories",
+      JSON.stringify(categories.split(",").map((t) => t.trim())),
+    );
+    formData.append("estimatedReadTime", estimatedReadTime || "0");
 
-  //seo fields
-  formData.append("slug", slug);
-  formData.append("metaTitle", metaTitle);
-  formData.append("metaDescription", metaDescription);
+    // seo fields
+    formData.append("slug", slug);
+    formData.append("metaTitle", metaTitle);
+    formData.append("metaDescription", metaDescription);
 
-  if (coverFile)
-    formData.append("coverImage", coverFile, coverFile.name);
+    if (coverFile) formData.append("coverImage", coverFile, coverFile.name);
 
-  Object.entries(imageFiles).forEach(([_, file]) => {
-    formData.append("images", file, file.name);
-  });
+    Object.entries(imageFiles).forEach(([_, file]) => {
+      formData.append("images", file, file.name);
+    });
 
-  const blocksData = blocks.map((b) => {
-    if (b.type === "image") {
-      return {
-        ...b,
-        data: { ...b.data, url: imagePreviews[b.id] || b.data.url || "" },
-      };
+    const blocksData = blocks.map((b) => {
+      if (b.type === "image") {
+        return {
+          ...b,
+          data: { ...b.data, url: imagePreviews[b.id] || b.data.url || "" },
+        };
+      }
+      return b;
+    });
+
+    formData.append("blocks", JSON.stringify(blocksData));
+
+    try {
+      if (blogId) {
+        await axiosInstance.put(
+          `http://localhost:5000/api/blogs/${blogId}`,
+          formData,
+          {
+            headers: { "x-blog-key": "supersecret123" },
+          },
+        );
+        alert("✅ Blog updated successfully!");
+      } else {
+        await axiosInstance.post("http://localhost:5000/api/blogs", formData, {
+          headers: { "x-blog-key": "supersecret123" },
+        });
+        alert("✅ Blog created successfully!");
+      }
+    } catch (err) {
+      console.error("❌ Blog submit error:", err);
+      alert("Error submitting blog.");
     }
-    return b;
-  });
-
-  formData.append("blocks", JSON.stringify(blocksData));
-
-  try {
-    let res;
-    if (blogId) {
-      // ✏️ Edit existing blog
-      res = await axiosInstance.put(`http://localhost:5000/api/blogs/${blogId}`, formData, {
-        headers: { "x-blog-key": "supersecret123" },
-      });
-      alert("✅ Blog updated successfully!");
-    } else {
-      // 🆕 Create new blog
-      res = await axiosInstance.post("http://localhost:5000/api/blogs", formData, {
-        headers: { "x-blog-key": "supersecret123" },
-      });
-      alert("✅ Blog created successfully!");
-    }
-  } catch (err) {
-    console.error("❌ Blog submit error:", err);
-    alert("Error submitting blog.");
-  }
-};
-
+  };
 
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-6 max-w-6xl mx-auto p-8 bg-white rounded-3xl shadow-lg"
+      className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg"
     >
       {/* 📝 Title */}
       <input
         placeholder="Title"
-        className="w-full border p-4 rounded-xl text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full rounded-xl border p-4 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
@@ -210,7 +239,7 @@ export default function BlogEditorForm({
       {/* 📄 Summary */}
       <textarea
         placeholder="Summary"
-        className="w-full border p-4 rounded-xl h-32 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="h-32 w-full rounded-xl border p-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={summary}
         onChange={(e) => setSummary(e.target.value)}
       />
@@ -219,88 +248,80 @@ export default function BlogEditorForm({
       <div className="grid grid-cols-2 gap-4">
         <input
           placeholder="Tags (comma separated)"
-          className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
-        {/* <input
-          placeholder="Author"
-          className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        /> */}
       </div>
 
       {/* 📚 Categories + 📅 Published On */}
       <div className="grid grid-cols-2 gap-4">
         <input
           placeholder="Categories (comma separated)"
-          className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={categories}
           onChange={(e) => setCategories(e.target.value)}
         />
         <input
           placeholder="Published On"
-          className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={publishedOn}
           onChange={(e) => setPublishedOn(e.target.value)}
         />
       </div>
 
       {/* ⏱ Estimated Time + 🖼 Cover */}
-      <div className="relative w-full flex flex-row gap-3 items-center">
+      <div className="relative flex w-full flex-row items-center gap-3">
         <FaClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           placeholder="Estimated read time (mins)"
-          className="w-full border pl-10 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={estimatedReadTime}
           onChange={(e) => setEstimatedReadTime(e.target.value)}
         />
         <div>
           <input type="file" accept="image/*" onChange={handleCoverChange} />
           {coverPreview && (
-            <img
-              src={coverPreview}
-              alt="cover"
-              style={{ maxHeight: 200, marginTop: 10 }}
-            />
+            <div className="relative mt-2 w-full h-[200px]">
+              <Image
+                src={coverPreview}
+                alt="cover"
+                fill
+                style={{ objectFit: "contain" }}
+              />
+            </div>
           )}
         </div>
         <div className="space-y-4">
-  {/* 🧩 Slug */}
-  <input
-    placeholder="Slug (leave empty to auto-generate from title)"
-    className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-    value={slug}
-    onChange={(e) => setSlug(e.target.value)}
-  />
-
-  {/* 🌐 Meta Title */}
-  <input
-    placeholder="Meta Title (used for SEO page title)"
-    className="w-full border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-    value={metaTitle}
-    onChange={(e) => setMetaTitle(e.target.value)}
-  />
-
-  {/* 📝 Meta Description */}
-  <textarea
-    placeholder="Meta Description (used for SEO snippet)"
-    className="w-full border p-3 rounded-xl h-28 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-    value={metaDescription}
-    onChange={(e) => setMetaDescription(e.target.value)}
-  />
-</div>
+          <input
+            placeholder="Slug (leave empty to auto-generate from title)"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+          />
+          <input
+            placeholder="Meta Title (used for SEO page title)"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={metaTitle}
+            onChange={(e) => setMetaTitle(e.target.value)}
+          />
+          <textarea
+            placeholder="Meta Description (used for SEO snippet)"
+            className="h-28 w-full rounded-xl border p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={metaDescription}
+            onChange={(e) => setMetaDescription(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* ➕ Block Options */}
-      <div className="sticky top-0 z-50 flex flex-wrap gap-3 mb-6 bg-white/90 backdrop-blur-md p-3 rounded-xl shadow">
+      <div className="sticky top-0 z-50 mb-6 flex flex-wrap gap-3 rounded-xl bg-white/90 p-3 shadow backdrop-blur-md">
         {blockOptions.map((opt) => (
           <button
             key={opt.value}
             type="button"
             onClick={() => addBlock(opt.value)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700"
           >
             + {opt.label}
           </button>
@@ -310,10 +331,7 @@ export default function BlogEditorForm({
       {/* 🧩 Render Blocks */}
       <div className="space-y-6">
         {blocks.map((block) => (
-          <div
-            key={block.id}
-            className="bg-gray-50 p-4 rounded-2xl shadow-sm"
-          >
+          <div key={block.id} className="rounded-2xl bg-gray-50 p-4 shadow-sm">
             <BlockEditor
               block={block}
               updateBlock={updateBlock}
@@ -321,11 +339,14 @@ export default function BlogEditorForm({
               onFileSelect={handleBlockFileSelect}
             />
             {block.type === "image" && imagePreviews[block.id] && (
-              <img
-                src={imagePreviews[block.id]}
-                alt="Preview"
-                className="mt-3 max-h-48 w-full object-cover rounded-xl shadow"
-              />
+              <div className="relative mt-3 w-full h-48 rounded-xl shadow">
+                <Image
+                  src={imagePreviews[block.id]!}
+                  alt="Preview"
+                  fill
+                  className="rounded-xl object-cover"
+                />
+              </div>
             )}
           </div>
         ))}
@@ -334,12 +355,10 @@ export default function BlogEditorForm({
       {/* ✅ Submit */}
       <button
         type="submit"
-        className="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition text-lg"
+        className="w-full rounded-xl bg-green-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-green-700"
       >
         Publish Blog
       </button>
     </form>
   );
 }
-
-

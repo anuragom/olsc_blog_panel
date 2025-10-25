@@ -1,6 +1,8 @@
-import { useAuth } from "./AuthContext";
+import React, { JSX } from "react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+
+import { useAuth } from "./AuthContext";
 
 export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { isLoggedIn, loading } = useAuth();
@@ -14,7 +16,7 @@ export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 
   // While checking session, show a loading spinner or nothing
   if (loading) {
-    return <p className="text-center mt-20">Checking session...</p>;
+    return <p className="mt-20 text-center">Checking session...</p>;
   }
 
   // If not logged in and not on login page

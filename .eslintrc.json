@@ -1,0 +1,18 @@
+{
+  "extends": ["next/core-web-vitals", "eslint:recommended"],
+  "rules": {
+     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    // Common real-world relaxations
+    "no-console": "off",
+    "no-alert": "off",
+    "no-underscore-dangle": "off",
+    "no-return-assign": "off",
+    "no-nested-ternary": "off",
+    "react/no-unescaped-entities": "off",
+    "react/jsx-key": "warn",
+
+    // Optional Tailwind migration warnings (disable if too noisy)
+    "tailwindcss/migration-from-tailwind-2": "off"
+  },
+  "ignorePatterns": ["next-env.d.ts"]
+}
