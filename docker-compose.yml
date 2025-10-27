@@ -1,0 +1,12 @@
+# version: '3.9'
+
+services:
+  nextjs-app:
+    build: .
+    container_name: olsc_panel
+    ports:
+      - "3000:3000"
+    # env_file:
+    #   - .env.production
+    environment:
+      - NODE_ENV=production
