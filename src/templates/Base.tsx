@@ -133,7 +133,8 @@ const Base = () => {
                   {/* Image */}
                   <div className="relative h-48 w-full">
                     <Image
-                      src={blog.coverImage ?? "/placeholder.png"}
+                      // src={blog.coverImage ?? "/placeholder.png"}
+                      src={`http://localhost:5000/api/blogs/${blog._id}/cover`}
                       alt={blog.title || "Blog Cover"}
                       fill
                       className="object-cover scale-110 transition-transform duration-300 group-hover:scale-100"

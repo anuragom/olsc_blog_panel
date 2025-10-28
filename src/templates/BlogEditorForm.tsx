@@ -79,43 +79,24 @@ export default function BlogEditorForm({
     {},
   );
 
-  // ➕ Add new block
-  // const addBlock = (type: BlockType) => {
-  //   const newBlock: Block = {
-  //     id: uuidv4(),
-  //     type,
-  //     data:
-  //       type === "list"
-  //         ? { items: [], style: "unordered" }
-  //         : type === "heading"
-  //         ? { text: "", level: 1 }
-  //         : type === "table"
-  //         ? { rows: [{ cells: [{ text: "" }] }] }
-  //         : type === "faq"
-  //         ? { faqs: [{ question: "", answer: "" }] }
-  //         : { text: "", url: "" },
-  //     _data: null, // ➕ Add _data to remove warning
-  //   };
-  //   setBlocks((prev) => [...prev, newBlock]);
-  // };
 
   const addBlock = (type: BlockType) => {
-  const newBlock: Block = {
-    id: uuidv4(),
-    type,
-    data:
-      type === "list"
-        ? { items: [], style: "unordered" }
-        : type === "heading"
-        ? { text: "", level: 1 }
-        : type === "table"
-        ? { rows: [{ cells: [{ text: "" }] }] }
-        : type === "faq"
-        ? { faqs: [{ question: "", answer: "" }] }
-        : { text: "", url: "" },
+    const newBlock: Block = {
+      id: uuidv4(),
+      type,
+      data:
+        type === "list"
+          ? { items: [], style: "unordered" }
+          : type === "heading"
+            ? { text: "", level: 1 }
+            : type === "table"
+              ? { rows: [{ cells: [{ text: "" }] }] }
+              : type === "faq"
+                ? { faqs: [{ question: "", answer: "" }] }
+                : { text: "", url: "" },
+    };
+    setBlocks((prev) => [...prev, newBlock]);
   };
-  setBlocks((prev) => [...prev, newBlock]);
-};
 
 
   // ✏️ Update block
@@ -279,7 +260,7 @@ export default function BlogEditorForm({
           value={estimatedReadTime}
           onChange={(e) => setEstimatedReadTime(e.target.value)}
         />
-        <div>
+        {/* <div>
           <input type="file" accept="image/*" onChange={handleCoverChange} />
           {coverPreview && (
             <div className="relative mt-2 w-full h-[200px]">
@@ -288,6 +269,18 @@ export default function BlogEditorForm({
                 alt="cover"
                 fill
                 style={{ objectFit: "contain" }}
+              />
+            </div>
+          )}
+        </div> */}
+        <div>
+          <input type="file" accept="image/*" onChange={handleCoverChange} />
+          {coverPreview && (
+            <div className="relative mt-2 w-[250px] h-[200px] rounded-lg overflow-hidden border shadow">
+              <img
+                src={coverPreview}
+                alt="Cover Preview"
+                className="object-contain w-full h-full"
               />
             </div>
           )}

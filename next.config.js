@@ -1,47 +1,46 @@
-// /* eslint-disable import/no-extraneous-dependencies */
-// const withBundleAnalyzer = require("@next/bundle-analyzer")({
-//   enabled: process.env.ANALYZE === "true",
-// });
+// let withBundleAnalyzer = (config) => config;
+
+// if (process.env.ANALYZE === 'true') {
+//   try {
+//     const bundleAnalyzer = require('@next/bundle-analyzer');
+//     withBundleAnalyzer = bundleAnalyzer({ enabled: true });
+//   } catch (err) {
+//     console.warn('Bundle analyzer not available in production.');
+//   }
+// }
 
 // module.exports = withBundleAnalyzer({
-//   eslint: {
-//     dirs: ["."],
-//   },
-//   poweredByHeader: false,
-//   trailingSlash: true,
-//   basePath: "",
-//   // The starter code load resources from `public` folder with `router.basePath` in React components.
-//   // So, the source code is "basePath-ready".
-//   // You can remove `basePath` if you don't need it.
 //   reactStrictMode: true,
-//    images: {
-//     remotePatterns: [
-//       {
-//         protocol: "http",
-//         hostname: "localhost",
-//         port: "5000", // your backend port
-//         pathname: "/uploads/**", // match all images
-//       },
-//       {
-//         protocol: "https",
-//         hostname: "yourdomain.com",
-//         pathname: "/**",
-//       },
-//     ],
-//   },
 // });
+
+
 // next.config.js
 let withBundleAnalyzer = (config) => config;
 
-if (process.env.ANALYZE === 'true') {
+if (process.env.ANALYZE === "true") {
   try {
-    const bundleAnalyzer = require('@next/bundle-analyzer');
+    const bundleAnalyzer = require("@next/bundle-analyzer");
     withBundleAnalyzer = bundleAnalyzer({ enabled: true });
   } catch (err) {
-    console.warn('Bundle analyzer not available in production.');
+    console.warn("Bundle analyzer not available in production.");
   }
 }
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5000", // 👈 your Express backend port
+        pathname: "/api/blogs/**", // 👈 allow all image paths
+      },
+      {
+        protocol: "https",
+        hostname: "yourdomain.com", // 👈 for production
+        pathname: "/**",
+      },
+    ],
+  },
 });

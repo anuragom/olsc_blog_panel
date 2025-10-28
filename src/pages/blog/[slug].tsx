@@ -36,6 +36,7 @@ export default function EditBlogPage() {
       .get(`http://localhost:5000/api/blogs/slug/${slug}`)
       .then((res) => {
         const blog = res.data;
+        console.log("blog=================",blog);
         const normalizedBlocks = (blog.blocks || []).map((b: any) => ({
           id: b.id ?? uuidv4(),
           ...b,

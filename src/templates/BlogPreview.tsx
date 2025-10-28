@@ -11,6 +11,7 @@ import type { Block } from "../types";
 import Image from "next/image";
 
 interface BlogPreviewProps {
+  blogId?: string;
   title: string;
   summary: string;
   tags: string;
@@ -42,6 +43,7 @@ interface RecentBlog {
 }
 
 export default function BlogPreview({
+  blogId,
   title,
   summary,
   // tags,
@@ -134,6 +136,8 @@ export default function BlogPreview({
 
     fetchRecentBlogs();
   }, []);
+  let imageIndex = 0;
+  console.log("coverPreview---------------------->>>", `http://localhost:5000/api/blogs/${blogId}/cover`)
 
   return (
     <>
@@ -307,7 +311,8 @@ export default function BlogPreview({
           {coverPreview && (
             <div className="relative mb-8 w-full h-[450px] overflow-hidden rounded-3xl shadow-md">
               <Image
-                src={coverPreview}
+                // src={coverPreview}
+                src={`http://localhost:5000/api/blogs/${blogId}/cover`}
                 alt="Cover"
                 fill
                 className="object-cover"
@@ -442,23 +447,42 @@ export default function BlogPreview({
                     </ol>
                   ))}
 
-                {(block.data.preview || block.data.url) && (
-                  <div className="relative h-[400px] w-full">
-                    <Image
-                      src={block.data.preview || block.data.url!} // `!` tells TS it's definitely not undefined
-                      alt={block.data.caption ?? ""}
-                      fill
-                      className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
-                      unoptimized
-                    />
-                    {block.data.caption && (
-                      <figcaption className="mt-2 text-center text-sm italic text-gray-500">
-                        {block.data.caption}
-                      </figcaption>
-                    )}
-                  </div>
-                )}
+                {/* {block.type === "image" && (
+      <div className="relative h-[400px] w-full my-6">
+        <Image
+          src={`http://localhost:5000/api/blogs/${blogId}/image/${blockIndex}`}
+          alt={block.data.caption ?? `Image ${blockIndex + 1}`}
+          fill
+          className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
+          unoptimized
+        />
+        {block.data.caption && (
+          <figcaption className="mt-2 text-center text-sm italic text-gray-500">
+            {block.data.caption}
+          </figcaption>
+        )}
+      </div>
+    )} */}
 
+                {block.type === "image" && (() => {
+                  const currentIndex = imageIndex++; // independent counter
+                  return (
+                    <div className="relative h-[400px] w-full my-6">
+                      <Image
+                        src={`http://localhost:5000/api/blogs/${blogId}/image/${currentIndex}`}
+                        alt={block.data.caption ?? `Image ${currentIndex + 1}`}
+                        fill
+                        className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
+                        unoptimized
+                      />
+                      {block.data.caption && (
+                        <figcaption className="mt-2 text-center text-sm italic text-gray-500">
+                          {block.data.caption}
+                        </figcaption>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {block.type === "video" && (
                   <div className="my-6">
@@ -537,7 +561,8 @@ export default function BlogPreview({
                 {/* Image */}
                 <div className="relative h-32 w-full">
                   <Image
-                    src={blog.coverImage ?? "/placeholder.png"}
+                    // src={blog.coverImage ?? "/placeholder.png"}
+                    src={`http://localhost:5000/api/blogs/${blog._id}/cover`}
                     alt={blog.title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
