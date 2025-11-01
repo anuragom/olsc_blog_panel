@@ -21,10 +21,10 @@ const Base = () => {
     setLoading(true);
     try {
       const url = searchQuery
-        ? `http://localhost:5000/api/blogs/search?q=${encodeURIComponent(
+        ? `http://192.168.222.238:5000/api/blogs/search?q=${encodeURIComponent(
           searchQuery,
         )}&page=${page}&limit=6`
-        : `http://localhost:5000/api/blogs?page=${page}&limit=6&sortBy=title&sortOrder=asc`;
+        : `http://192.168.222.238:5000/api/blogs?page=${page}&limit=6&sortBy=title&sortOrder=asc`;
 
       const headers: any = {};
 
@@ -67,7 +67,7 @@ const Base = () => {
     if (!selectedBlogId) return;
     try {
       await axiosInstance.delete(
-        `http://localhost:5000/api/blogs/${selectedBlogId}`,
+        `http://192.168.222.238:5000/api/blogs/${selectedBlogId}`,
         {
           headers: { "x-blog-key": "supersecret123" },
         },
@@ -134,7 +134,7 @@ const Base = () => {
                   <div className="relative h-48 w-full">
                     <Image
                       // src={blog.coverImage ?? "/placeholder.png"}
-                      src={`http://localhost:5000/api/blogs/${blog._id}/cover`}
+                      src={`http://192.168.222.238:5000/api/blogs/${blog._id}/cover`}
                       alt={blog.title || "Blog Cover"}
                       fill
                       className="object-cover scale-110 transition-transform duration-300 group-hover:scale-100"
@@ -199,8 +199,8 @@ const Base = () => {
               }
               disabled={pagination.page === 1}
               className={`rounded-lg border px-4 py-2 text-sm transition-all ${pagination.page === 1
-                  ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                  : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
+                ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
                 }`}
             >
               Previous
@@ -212,8 +212,8 @@ const Base = () => {
                   key={page}
                   onClick={() => fetchBlogs(page, query.trim() || null)}
                   className={`rounded-lg border px-4 py-2 text-sm transition-all ${pagination.page === page
-                      ? "bg-[#0D5BAA] text-white"
-                      : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
+                    ? "bg-[#0D5BAA] text-white"
+                    : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
                     }`}
                 >
                   {page}
@@ -230,8 +230,8 @@ const Base = () => {
               }
               disabled={pagination.page === pagination.totalPages}
               className={`rounded-lg border px-4 py-2 text-sm transition-all ${pagination.page === pagination.totalPages
-                  ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                  : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
+                ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                : "border-[#0D5BAA] bg-white text-[#0D5BAA] hover:bg-[#0D5BAA] hover:text-white"
                 }`}
             >
               Next

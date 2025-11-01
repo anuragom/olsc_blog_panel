@@ -32,7 +32,7 @@ module.exports = withBundleAnalyzer({
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "localhost",
+        hostname: "192.168.222.238",
         port: "5000", // 👈 your Express backend port
         pathname: "/api/blogs/**", // 👈 allow all image paths
       },

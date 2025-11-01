@@ -33,7 +33,7 @@ export default function EditBlogPage() {
     if (!slug) return;
     setLoading(true);
     axiosInstance
-      .get(`http://localhost:5000/api/blogs/slug/${slug}`)
+      .get(`http://192.168.222.238:5000/api/blogs/slug/${slug}`)
       .then((res) => {
         const blog = res.data;
         console.log("blog=================",blog);

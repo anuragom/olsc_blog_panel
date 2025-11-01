@@ -184,7 +184,7 @@ export default function BlogEditorForm({
     try {
       if (blogId) {
         await axiosInstance.put(
-          `http://localhost:5000/api/blogs/${blogId}`,
+          `http://192.168.222.238:5000/api/blogs/${blogId}`,
           formData,
           {
             headers: { "x-blog-key": "supersecret123" },
@@ -192,7 +192,7 @@ export default function BlogEditorForm({
         );
         alert("✅ Blog updated successfully!");
       } else {
-        await axiosInstance.post("http://localhost:5000/api/blogs", formData, {
+        await axiosInstance.post("http://192.168.222.238:5000/api/blogs", formData, {
           headers: { "x-blog-key": "supersecret123" },
         });
         alert("✅ Blog created successfully!");
