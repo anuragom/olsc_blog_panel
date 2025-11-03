@@ -6,6 +6,8 @@
 .pnp.js
 .env
 
+docker-compose.yml
+
 # testing
 /coverage
 
