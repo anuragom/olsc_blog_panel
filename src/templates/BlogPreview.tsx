@@ -63,6 +63,8 @@ export default function BlogPreview({
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
   // Generate section index
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   const sectionIndex = useMemo(
     () =>
       blocks
@@ -121,7 +123,7 @@ export default function BlogPreview({
     const fetchRecentBlogs = async () => {
       try {
         const res = await axiosInstance.get(
-          "http://192.168.222.238:5000/api/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc",
+          `${baseUrl}/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -137,7 +139,6 @@ export default function BlogPreview({
     fetchRecentBlogs();
   }, []);
   let imageIndex = 0;
-  console.log("coverPreview---------------------->>>", `http://localhost:5000/api/blogs/${blogId}/cover`)
 
   return (
     <>
@@ -312,7 +313,7 @@ export default function BlogPreview({
             <div className="relative mb-8 w-full h-[450px] overflow-hidden rounded-3xl shadow-md">
               <Image
                 // src={coverPreview}
-                src={`http://192.168.222.238:5000/api/blogs/${blogId}/cover`}
+                src={`${baseUrl}/blogs/${blogId}/cover`}
                 alt="Cover"
                 fill
                 className="object-cover"
@@ -469,7 +470,7 @@ export default function BlogPreview({
                   return (
                     <div className="relative h-[400px] w-full my-6">
                       <Image
-                        src={`http://192.168.222.238:5000/api/blogs/${blogId}/image/${currentIndex}`}
+                        src={`${baseUrl}/blogs/${blogId}/image/${currentIndex}`}
                         alt={block.data.caption ?? `Image ${currentIndex + 1}`}
                         fill
                         className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
@@ -562,7 +563,7 @@ export default function BlogPreview({
                 <div className="relative h-32 w-full">
                   <Image
                     // src={blog.coverImage ?? "/placeholder.png"}
-                    src={`http://192.168.222.238:5000/api/blogs/${blog._id}/cover`}
+                    src={`${baseUrl}/blogs/${blog._id}/cover`}
                     alt={blog.title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"

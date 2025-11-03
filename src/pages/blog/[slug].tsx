@@ -29,14 +29,15 @@ export default function EditBlogPage() {
     metaDescription: string;
   } | null>(null);
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
     axiosInstance
-      .get(`http://192.168.222.238:5000/api/blogs/slug/${slug}`)
+      .get(`${baseUrl}/blogs/slug/${slug}`)
       .then((res) => {
         const blog = res.data;
-        console.log("blog=================",blog);
         const normalizedBlocks = (blog.blocks || []).map((b: any) => ({
           id: b.id ?? uuidv4(),
           ...b,

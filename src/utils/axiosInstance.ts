@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a single axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://192.168.222.238:5000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true, // send cookies on every request
 });
 

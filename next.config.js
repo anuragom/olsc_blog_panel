@@ -26,13 +26,16 @@ if (process.env.ANALYZE === "true") {
   }
 }
 
+const backendHost =
+  process.env.NEXT_PUBLIC_BACKEND_HOST || "localhost";
+
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
   images: {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "192.168.222.238",
+        hostname: backendHost,
         port: "5000", // 👈 your Express backend port
         pathname: "/api/blogs/**", // 👈 allow all image paths
       },

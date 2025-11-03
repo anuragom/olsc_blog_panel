@@ -17,14 +17,16 @@ const Base = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
   const fetchBlogs = async (page = 1, searchQuery: string | null = null) => {
     setLoading(true);
     try {
       const url = searchQuery
-        ? `http://192.168.222.238:5000/api/blogs/search?q=${encodeURIComponent(
+        ? `${baseUrl}/blogs/search?q=${encodeURIComponent(
           searchQuery,
         )}&page=${page}&limit=6`
-        : `http://192.168.222.238:5000/api/blogs?page=${page}&limit=6&sortBy=title&sortOrder=asc`;
+        : `${baseUrl}/blogs?page=${page}&limit=6&sortBy=title&sortOrder=asc`;
 
       const headers: any = {};
 
@@ -67,10 +69,10 @@ const Base = () => {
     if (!selectedBlogId) return;
     try {
       await axiosInstance.delete(
-        `http://192.168.222.238:5000/api/blogs/${selectedBlogId}`,
-        {
-          headers: { "x-blog-key": "supersecret123" },
-        },
+        `${baseUrl}/blogs/${selectedBlogId}`,
+        // {
+        //   headers: { "x-blog-key": "supersecret123" },
+        // },
       );
       setResults((prev) => prev.filter((b) => b._id !== selectedBlogId));
       setShowModal(false);
@@ -134,7 +136,7 @@ const Base = () => {
                   <div className="relative h-48 w-full">
                     <Image
                       // src={blog.coverImage ?? "/placeholder.png"}
-                      src={`http://192.168.222.238:5000/api/blogs/${blog._id}/cover`}
+                      src={`${baseUrl}/blogs/${blog._id}/cover`}
                       alt={blog.title || "Blog Cover"}
                       fill
                       className="object-cover scale-110 transition-transform duration-300 group-hover:scale-100"

@@ -79,6 +79,8 @@ export default function BlogEditorForm({
     {},
   );
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
 
   const addBlock = (type: BlockType) => {
     const newBlock: Block = {
@@ -184,16 +186,16 @@ export default function BlogEditorForm({
     try {
       if (blogId) {
         await axiosInstance.put(
-          `http://192.168.222.238:5000/api/blogs/${blogId}`,
+          `${baseUrl}/blogs/${blogId}`,
           formData,
-          {
-            headers: { "x-blog-key": "supersecret123" },
-          },
+          // {
+          //   headers: { "x-blog-key": "supersecret123" },
+          // },
         );
         alert("✅ Blog updated successfully!");
       } else {
-        await axiosInstance.post("http://192.168.222.238:5000/api/blogs", formData, {
-          headers: { "x-blog-key": "supersecret123" },
+        await axiosInstance.post(`${baseUrl}/blogs`, formData, {
+          // headers: { "x-blog-key": "supersecret123" },
         });
         alert("✅ Blog created successfully!");
       }
