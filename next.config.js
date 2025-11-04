@@ -26,8 +26,7 @@ if (process.env.ANALYZE === "true") {
   }
 }
 
-const backendHost =
-  process.env.NEXT_PUBLIC_BACKEND_HOST || "localhost";
+const backendHost = process.env.NEXT_PUBLIC_API_BASE;
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
