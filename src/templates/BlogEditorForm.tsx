@@ -19,8 +19,8 @@ interface Props {
   setTags: (_v: string) => void;
   categories: string;
   setCategories: (_v: string) => void;
-  publishedOn: string;
-  setPublishedOn: (_v: string) => void;
+  createdAt: string;
+  setCreatedAt: (_v: string) => void;
   coverPreview: string | null;
   setCoverPreview: (_v: string | null) => void;
   blocks: Block[];
@@ -58,8 +58,6 @@ export default function BlogEditorForm({
   setTags,
   categories,
   setCategories,
-  publishedOn,
-  setPublishedOn,
   coverPreview,
   setCoverPreview,
   blocks,
@@ -81,7 +79,6 @@ export default function BlogEditorForm({
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-
   const addBlock = (type: BlockType) => {
     const newBlock: Block = {
       id: uuidv4(),
@@ -99,17 +96,12 @@ export default function BlogEditorForm({
     };
     setBlocks((prev) => [...prev, newBlock]);
   };
-
-
-  // ✏️ Update block
   const updateBlock = (_id: string, _data: any) =>
     setBlocks((prevBlocks) =>
       prevBlocks.map((b) =>
         b.id === _id ? { ...b, _data, data: _data } : b
       ),
     );
-
-  // 🗑️ Remove block
   const removeBlock = (_id: string) => {
     setBlocks((prevBlocks) => prevBlocks.filter((b) => b.id !== _id));
     setImageFiles((prev) => {
@@ -123,8 +115,6 @@ export default function BlogEditorForm({
       return updated;
     });
   };
-
-  // 🖼️ Cover image change
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -132,8 +122,6 @@ export default function BlogEditorForm({
       setCoverPreview(URL.createObjectURL(file));
     }
   };
-
-  // 📸 Block image file select
   const handleBlockFileSelect = (blockId: string, file: File) => {
     setImageFiles((prev) => ({ ...prev, [blockId]: file }));
     const previewUrl = URL.createObjectURL(file);
@@ -143,7 +131,6 @@ export default function BlogEditorForm({
       url: previewUrl,
     });
   };
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -160,7 +147,6 @@ export default function BlogEditorForm({
     );
     formData.append("estimatedReadTime", estimatedReadTime || "0");
 
-    // seo fields
     formData.append("slug", slug);
     formData.append("metaTitle", metaTitle);
     formData.append("metaDescription", metaDescription);
@@ -185,17 +171,29 @@ export default function BlogEditorForm({
 
     try {
       if (blogId) {
+        console.log("🧾 FormData entries:");
+Array.from(formData.entries()).forEach(([key, value]) => {
+  if (value instanceof File) {
+    console.log(`${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`);
+  } else {
+    console.log(`${key}:`, value);
+  }
+});
         await axiosInstance.put(
           `${baseUrl}/blogs/${blogId}`,
           formData,
-          // {
-          //   headers: { "x-blog-key": "supersecret123" },
-          // },
         );
         alert("✅ Blog updated successfully!");
       } else {
+        console.log("🧾 FormData entries:");
+Array.from(formData.entries()).forEach(([key, value]) => {
+  if (value instanceof File) {
+    console.log(`${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`);
+  } else {
+    console.log(`${key}:`, value);
+  }
+});
         await axiosInstance.post(`${baseUrl}/blogs`, formData, {
-          // headers: { "x-blog-key": "supersecret123" },
         });
         alert("✅ Blog created successfully!");
       }
@@ -208,52 +206,50 @@ export default function BlogEditorForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg"
-    >
-      {/* 📝 Title */}
+      className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg">
       <input
         placeholder="Title"
         className="w-full rounded-xl border p-4 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        required
-      />
-
-      {/* 📄 Summary */}
+        required/>
       <textarea
         placeholder="Summary"
         className="h-32 w-full rounded-xl border p-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={summary}
-        onChange={(e) => setSummary(e.target.value)}
-      />
-
-      {/* 🏷️ Tags + ✍️ Author */}
+        onChange={(e) => setSummary(e.target.value)}/>
       <div className="grid grid-cols-2 gap-4">
         <input
           placeholder="Tags (comma separated)"
           className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={tags}
-          onChange={(e) => setTags(e.target.value)}
-        />
+          onChange={(e) => setTags(e.target.value)}/>
       </div>
-
-      {/* 📚 Categories + 📅 Published On */}
       <div className="grid grid-cols-2 gap-4">
-        <input
-          placeholder="Categories (comma separated)"
-          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={categories}
-          onChange={(e) => setCategories(e.target.value)}
-        />
-        <input
-          placeholder="Published On"
-          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={publishedOn}
-          onChange={(e) => setPublishedOn(e.target.value)}
-        />
+          <input
+            placeholder="Categories (comma separated)"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={categories}
+            onChange={(e) => setCategories(e.target.value)}
+          />
+          <input
+            placeholder="Slug (leave empty to auto-generate from title)"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+          />
+          <input
+            placeholder="Meta Title (used for SEO page title)"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={metaTitle}
+            onChange={(e) => setMetaTitle(e.target.value)}
+         />
+         <textarea
+            placeholder="Meta Description (used for SEO snippet)"
+            className="h-28 w-full rounded-xl border p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={metaDescription}
+            onChange={(e) => setMetaDescription(e.target.value)}/>
       </div>
-
-      {/* ⏱ Estimated Time + 🖼 Cover */}
       <div className="relative flex w-full flex-row items-center gap-3">
         <FaClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
@@ -262,19 +258,6 @@ export default function BlogEditorForm({
           value={estimatedReadTime}
           onChange={(e) => setEstimatedReadTime(e.target.value)}
         />
-        {/* <div>
-          <input type="file" accept="image/*" onChange={handleCoverChange} />
-          {coverPreview && (
-            <div className="relative mt-2 w-full h-[200px]">
-              <Image
-                src={coverPreview}
-                alt="cover"
-                fill
-                style={{ objectFit: "contain" }}
-              />
-            </div>
-          )}
-        </div> */}
         <div>
           <input type="file" accept="image/*" onChange={handleCoverChange} />
           {coverPreview && (
@@ -287,29 +270,7 @@ export default function BlogEditorForm({
             </div>
           )}
         </div>
-        <div className="space-y-4">
-          <input
-            placeholder="Slug (leave empty to auto-generate from title)"
-            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          />
-          <input
-            placeholder="Meta Title (used for SEO page title)"
-            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={metaTitle}
-            onChange={(e) => setMetaTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Meta Description (used for SEO snippet)"
-            className="h-28 w-full rounded-xl border p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-          />
-        </div>
       </div>
-
-      {/* ➕ Block Options */}
       <div className="sticky top-0 z-50 mb-6 flex flex-wrap gap-3 rounded-xl bg-white/90 p-3 shadow backdrop-blur-md">
         {blockOptions.map((opt) => (
           <button
@@ -322,8 +283,6 @@ export default function BlogEditorForm({
           </button>
         ))}
       </div>
-
-      {/* 🧩 Render Blocks */}
       <div className="space-y-6">
         {blocks.map((block) => (
           <div key={block.id} className="rounded-2xl bg-gray-50 p-4 shadow-sm">
@@ -346,8 +305,6 @@ export default function BlogEditorForm({
           </div>
         ))}
       </div>
-
-      {/* ✅ Submit */}
       <button
         type="submit"
         className="w-full rounded-xl bg-green-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-green-700"

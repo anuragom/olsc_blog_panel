@@ -13,7 +13,7 @@ interface BlogEditorProps {
   initialTags?: string;
   initialCategories?: string;
   initialAuthor?: string;
-  initialPublishedOn?: string;
+  initialCreatedAt?: string;
   initialEstimatedReadTime?: string;
   initialCoverPreview?: string | null;
   initialBlocks?: Block[];
@@ -29,7 +29,7 @@ export default function BlogEditor({
   initialTags = "",
   initialCategories = "",
   initialAuthor = "",
-  initialPublishedOn = "",
+  initialCreatedAt = "",
   initialEstimatedReadTime = "",
   initialCoverPreview = null,
   initialBlocks = [],
@@ -43,7 +43,7 @@ export default function BlogEditor({
   const [tags, setTags] = useState(initialTags);
   const [categories, setCategories] = useState(initialCategories);
   const [author] = useState(initialAuthor);
-  const [publishedOn, setPublishedOn] = useState(initialPublishedOn);
+  const [createdAt, setCreatedAt] = useState(initialCreatedAt);
   const [estimatedReadTime, setEstimatedReadTime] = useState(
     initialEstimatedReadTime,
   );
@@ -97,8 +97,8 @@ export default function BlogEditor({
           setTags={setTags}
           categories={categories}
           setCategories={setCategories}
-          publishedOn={publishedOn}
-          setPublishedOn={setPublishedOn}
+          createdAt={createdAt}
+          setCreatedAt={setCreatedAt}
           coverPreview={coverPreview}
           setCoverPreview={setCoverPreview}
           blocks={blocks}
@@ -120,7 +120,7 @@ export default function BlogEditor({
           tags={tags}
           categories={categories}
           author={author}
-          publishedOn={publishedOn}
+          createdAt={createdAt}
           coverPreview={coverPreview}
           blocks={blocks}
           estimatedReadTime={estimatedReadTime}

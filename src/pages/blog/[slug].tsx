@@ -20,7 +20,7 @@ export default function EditBlogPage() {
     tags: string;
     categories: string;
     author: string;
-    publishedOn: string;
+    createdAt: string;
     estimatedReadTime: string;
     coverPreview: string | null;
     blocks: Block[];
@@ -50,7 +50,7 @@ export default function EditBlogPage() {
           tags: blog.tags.join(", "),
           categories: blog.categories.join(", "),
           author: blog.author.fullName || "",
-          publishedOn: blog.publishedOn || "",
+          createdAt: blog.createdAt?.toString() || "",
           estimatedReadTime: blog.estimatedReadTime?.toString() || "",
           coverPreview: blog.coverImage || null,
           blocks: normalizedBlocks,
@@ -80,7 +80,7 @@ export default function EditBlogPage() {
           initialTags={initialData.tags}
           initialCategories={initialData.categories}
           initialAuthor={initialData.author}
-          initialPublishedOn={initialData.publishedOn}
+          initialCreatedAt={initialData.createdAt}
           initialEstimatedReadTime={initialData.estimatedReadTime}
           initialCoverPreview={initialData.coverPreview}
           initialBlocks={initialData.blocks}

@@ -1,20 +1,3 @@
-// let withBundleAnalyzer = (config) => config;
-
-// if (process.env.ANALYZE === 'true') {
-//   try {
-//     const bundleAnalyzer = require('@next/bundle-analyzer');
-//     withBundleAnalyzer = bundleAnalyzer({ enabled: true });
-//   } catch (err) {
-//     console.warn('Bundle analyzer not available in production.');
-//   }
-// }
-
-// module.exports = withBundleAnalyzer({
-//   reactStrictMode: true,
-// });
-
-
-// next.config.js
 let withBundleAnalyzer = (config) => config;
 
 if (process.env.ANALYZE === "true") {

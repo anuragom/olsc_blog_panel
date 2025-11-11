@@ -18,7 +18,7 @@ interface BlogPreviewProps {
   categories: string;
   estimatedReadTime: string;
   author: string;
-  publishedOn: string;
+  createdAt: string;
   coverPreview: string | null;
   blocks: Block[];
   slug: string;
@@ -49,7 +49,7 @@ export default function BlogPreview({
   // tags,
   categories,
   author,
-  publishedOn,
+  createdAt,
   coverPreview,
   estimatedReadTime,
   blocks,
@@ -64,6 +64,16 @@ export default function BlogPreview({
   // Generate section index
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   const sectionIndex = useMemo(
     () =>
@@ -139,6 +149,34 @@ export default function BlogPreview({
     fetchRecentBlogs();
   }, []);
   let imageIndex = 0;
+
+  // src/utils/getYouTubeEmbedUrl.ts
+  function getYouTubeEmbedUrl(url?: string): string {
+    if (!url) return "";
+
+    try {
+      const parsedUrl = new URL(url);
+      const hostname = parsedUrl.hostname;
+
+      // Case 1: https://www.youtube.com/watch?v=abc123
+      if (hostname.includes("youtube.com") && parsedUrl.searchParams.has("v")) {
+        const videoId = parsedUrl.searchParams.get("v");
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      // Case 2: https://youtu.be/abc123
+      if (hostname.includes("youtu.be")) {
+        const videoId = parsedUrl.pathname.split("/").pop();
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      return url;
+    } catch {
+      return url;
+    }
+  }
+
+
 
   return (
     <>
@@ -299,10 +337,11 @@ export default function BlogPreview({
                 Categories :{" "}
                 <span className="font-medium text-[#EE222F]">{categories}</span>
               </p>
-              {publishedOn && (
+              {createdAt && (
                 <div className="flex flex-row items-center">
+                  {/* <p>{formatDate(blog?.createdAt)}</p> */}
                   <CiCalendarDate className="mr-3 text-2xl text-[#074B83]" />
-                  <p className="flex items-center gap-1">{publishedOn}</p>
+                  <p className="flex items-center gap-1">{formatDate(createdAt)}</p>
                 </div>
               )}
             </div>
@@ -448,23 +487,6 @@ export default function BlogPreview({
                     </ol>
                   ))}
 
-                {/* {block.type === "image" && (
-      <div className="relative h-[400px] w-full my-6">
-        <Image
-          src={`http://localhost:5000/api/blogs/${blogId}/image/${blockIndex}`}
-          alt={block.data.caption ?? `Image ${blockIndex + 1}`}
-          fill
-          className="rounded-2xl object-cover shadow transition-transform duration-300 hover:scale-[1.02]"
-          unoptimized
-        />
-        {block.data.caption && (
-          <figcaption className="mt-2 text-center text-sm italic text-gray-500">
-            {block.data.caption}
-          </figcaption>
-        )}
-      </div>
-    )} */}
-
                 {block.type === "image" && (() => {
                   const currentIndex = imageIndex++; // independent counter
                   return (
@@ -487,36 +509,17 @@ export default function BlogPreview({
 
                 {block.type === "video" && (
                   <div className="my-6">
-                    {block.data.url ? (
-                      block.data.url.includes("youtube.com") ||
-                        block.data.url.includes("youtu.be") ? (
-                        <div className="aspect-w-16 aspect-h-9">
-                          <iframe
-                            src={
-                              block.data.url.includes("embed")
-                                ? block.data.url
-                                : block.data.url.replace("watch?v=", "embed/")
-                            }
-                            title="YouTube video"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="h-[400px] w-full rounded-2xl shadow"
-                          />
-                        </div>
-                      ) : (
-                        <video
-                          src={block.data.url}
-                          controls
-                          className="max-h-96 w-full rounded-2xl shadow"
-                        />
-                      )
-                    ) : (
-                      <p className="italic text-gray-400">
-                        No video URL provided
-                      </p>
-                    )}
+                    <div className="aspect-w-16 aspect-h-9">
+                      <iframe
+                        className="h-[400px] w-full rounded-2xl shadow"
+                        src={getYouTubeEmbedUrl(block?.data?.url)}
+                        frameBorder="0"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
                   </div>
                 )}
+
               </div>
             ))}
           </div>
