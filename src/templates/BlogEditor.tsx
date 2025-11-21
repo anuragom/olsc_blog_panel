@@ -57,7 +57,6 @@ export default function BlogEditor({
     initialMetaDescription,
   );
 
-  console.log("from editor id val",blogId);
 
   return (
     <div className="p-4">
