@@ -59,7 +59,7 @@ export default function BlogEditor({
 
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       <div className="mb-4 mt-[35px] flex justify-end gap-2">
         <button
           onClick={() => setView("editor")}

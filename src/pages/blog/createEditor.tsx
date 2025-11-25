@@ -10,7 +10,7 @@ export default function BlogEditorPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Navbar />
-      <main className="mt-24 w-full flex-1 p-6">
+      <main className="mt-24 w-full flex-1 p-0">
         <BlogEditor />
       </main>
       <Footer />

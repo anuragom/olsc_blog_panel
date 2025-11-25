@@ -171,34 +171,17 @@ export default function BlogEditorForm({
 
     try {
       if (blogId) {
-        console.log("🧾 FormData entries:");
-Array.from(formData.entries()).forEach(([key, value]) => {
-  if (value instanceof File) {
-    console.log(`${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`);
-  } else {
-    console.log(`${key}:`, value);
-  }
-});
         await axiosInstance.put(
           `${baseUrl}/blogs/${blogId}`,
           formData,
         );
         alert("✅ Blog updated successfully!");
       } else {
-        console.log("🧾 FormData entries:");
-Array.from(formData.entries()).forEach(([key, value]) => {
-  if (value instanceof File) {
-    console.log(`${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`);
-  } else {
-    console.log(`${key}:`, value);
-  }
-});
         await axiosInstance.post(`${baseUrl}/blogs`, formData, {
         });
         alert("✅ Blog created successfully!");
       }
     } catch (err) {
-      console.error("❌ Blog submit error:", err);
       alert("Error submitting blog.");
     }
   };

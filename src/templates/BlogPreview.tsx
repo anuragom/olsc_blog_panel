@@ -254,11 +254,12 @@ export default function BlogPreview({
           className="h-1 w-0 bg-red-600 transition-[width] duration-150 ease-out"
         ></div>
       </div>
-      <div className="relative flex min-h-screen flex-row bg-gradient-to-b from-[#F9FAFB] to-[#F3F4F6] font-sans text-gray-800">
+      <div className="relative flex min-h-screen flex-col xl:flex-row bg-gradient-to-b from-[#F9FAFB] to-[#F3F4F6] font-sans text-gray-800">
         {/* Table of Contents */}
         {sectionIndex.length > 0 && (
           <aside
-            className="sticky hidden w-1/5 px-4 lg:block"
+            // className="sticky hidden w-1/5 px-4 lg:block"
+            className="sticky hidden xl:block min-w-[280px] max-w-[360px] px-4"
             style={{
               top: "200px",
               alignSelf: "flex-start",
@@ -280,7 +281,7 @@ export default function BlogPreview({
                     style={{ marginLeft: `${(sec.level - 1) * 12}px` }}
                   >
                     <span className="size-2 shrink-0 rounded-full"></span>
-                    <span>{sec.text}</span>
+                    <span className="break-words whitespace-normal">{sec.text}</span>
                   </li>
                 ))}
               </ul>
@@ -307,7 +308,9 @@ export default function BlogPreview({
         )}
 
         {/* Main content area */}
-        <main className="mx-auto max-w-5xl flex-1 space-y-4 overflow-y-auto px-8 py-10">
+        {/* <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8 space-y-4 overflow-y-auto px-8 py-10"> */}
+        <main className="mx-auto w-full max-w-5xl flex-1 px-3 sm:px-0 lg:px-8 space-y-4 py-10">
+
           {/* Title */}
           {title && (
             <h1 className="mb-2 text-5xl font-bold leading-snug tracking-tight text-[#074B83] md:text-6xl">
@@ -385,7 +388,8 @@ export default function BlogPreview({
                 ))}
             </div>
           )} */}
-          <div className="space-y-8 rounded-3xl bg-white p-10 shadow-lg">
+          {/* <div className="space-y-8 rounded-3xl bg-white p-10 shadow-lg"> */}
+          <div className="space-y-8 rounded-3xl bg-white p-4 sm:p-0 md:p-2 lg:p-4 shadow-lg">
             {blocks.map((block) => (
               <div key={block.id} id={block.id} className="scroll-mt-28">
                 {block.type === "heading" && (
@@ -426,7 +430,7 @@ export default function BlogPreview({
                   </table>
                 )}
 
-                {block.type === "faq" && (
+                {/* {block.type === "faq" && (
                   <div className="my-4 space-y-2">
                     <h2
                       id="faqs"
@@ -444,11 +448,45 @@ export default function BlogPreview({
                       </div>
                     ))}
                   </div>
+                )} */}
+
+                {block.type === "faq" && (
+                  <div className="my-4 space-y-2">
+                    <h2 id="faqs" className="mb-4 mt-8 text-2xl font-bold text-red-500">
+                      FAQ’s
+                    </h2>
+
+                    {block.data.faqs?.map((faq, idx) => {
+                      const [open, setOpen] = useState(false);
+
+                      return (
+                        <div
+                          key={idx}
+                          className="rounded-lg border bg-gray-50"
+                        >
+                          <button
+                            onClick={() => setOpen(!open)}
+                            className="w-full flex justify-between items-center p-3 font-semibold text-left"
+                          >
+                            {faq.question}
+                            <span className="text-xl">{open ? "−" : "+"}</span>
+                          </button>
+
+                          {open && (
+                            <p className="px-3 pb-3 text-gray-700">
+                              {faq.answer}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
+
 
                 {block.type === "paragraph" && (
                   <div
-                    className="leading-relaxed text-gray-800"
+                    className="prose prose-sm sm:prose-base max-w-full break-words text-gray-800"
                     dangerouslySetInnerHTML={{
                       __html: enhanceLinks(block.data.text ?? ""),
                     }}
@@ -527,7 +565,9 @@ export default function BlogPreview({
 
         {/* Right Sidebar: Recent Blogs */}
         <aside
-          className="sticky top-[6rem] hidden h-[calc(100vh-6rem)] w-1/4 overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
+          // className="sticky top-[6rem] hidden h-[calc(100vh-6rem)] w-1/4 overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
+          className="sticky hidden xl:block top-[6rem] hidden h-[calc(100vh-6rem)] w-1/4 overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
+
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#074B83 #f1f1f1",

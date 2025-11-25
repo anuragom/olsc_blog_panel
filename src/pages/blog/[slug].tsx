@@ -72,7 +72,7 @@ export default function EditBlogPage() {
   return (
     <>
       <Navbar />
-      <div className="mt-36 w-full flex-1 p-6">
+      <div className="mt-36 w-full flex-1 p-0">
         <BlogEditor
           blogId={initialData._id}
           initialTitle={initialData.title}
