@@ -42,6 +42,29 @@ interface RecentBlog {
   slug: string;
 }
 
+function FAQItem({ faq }: { faq: { question: string; answer: string } }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="rounded-lg border bg-gray-50">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex justify-between items-center p-3 font-semibold text-left"
+      >
+        {faq.question}
+        <span className="text-xl">{open ? "−" : "+"}</span>
+      </button>
+
+      {open && (
+        <p className="px-3 pb-3 text-gray-700">
+          {faq.answer}
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 export default function BlogPreview({
   blogId,
   title,
@@ -147,7 +170,7 @@ export default function BlogPreview({
     };
 
     fetchRecentBlogs();
-  }, []);
+  }, [baseUrl]);
   let imageIndex = 0;
 
   // src/utils/getYouTubeEmbedUrl.ts
@@ -453,33 +476,12 @@ export default function BlogPreview({
                 {block.type === "faq" && (
                   <div className="my-4 space-y-2">
                     <h2 id="faqs" className="mb-4 mt-8 text-2xl font-bold text-red-500">
-                      FAQ’szzzzzzzzzz
+                      FAQ's
                     </h2>
 
-                    {block.data.faqs?.map((faq, idx) => {
-                      const [open, setOpen] = useState(false);
-
-                      return (
-                        <div
-                          key={idx}
-                          className="rounded-lg border bg-gray-50"
-                        >
-                          <button
-                            onClick={() => setOpen(!open)}
-                            className="w-full flex justify-between items-center p-3 font-semibold text-left"
-                          >
-                            {faq.question}
-                            <span className="text-xl">{open ? "−" : "+"}</span>
-                          </button>
-
-                          {open && (
-                            <p className="px-3 pb-3 text-gray-700">
-                              {faq.answer}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {block.data.faqs?.map((faq, idx) => (
+                      <FAQItem key={idx} faq={faq} />
+                    ))}
                   </div>
                 )}
 
