@@ -453,7 +453,7 @@ export default function BlogPreview({
                 {block.type === "faq" && (
                   <div className="my-4 space-y-2">
                     <h2 id="faqs" className="mb-4 mt-8 text-2xl font-bold text-red-500">
-                      FAQ’s
+                      FAQ’szzzzzzzzzz
                     </h2>
 
                     {block.data.faqs?.map((faq, idx) => {
