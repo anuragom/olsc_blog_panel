@@ -26,7 +26,7 @@ const Base = () => {
         ? `${baseUrl}/blogs/search?q=${encodeURIComponent(
           searchQuery,
         )}&page=${page}&limit=6`
-        : `${baseUrl}/blogs?page=${page}&limit=6&sortBy=title&sortOrder=asc`;
+        : `${baseUrl}/blogs?page=${page}&limit=6&sortBy=createdAt&sortOrder=desc`;
 
       const headers: any = {};
 
@@ -139,7 +139,8 @@ const Base = () => {
                       src={`${baseUrl}/blogs/${blog._id}/cover`}
                       alt={blog.title || "Blog Cover"}
                       fill
-                      className="object-cover scale-110 transition-transform duration-300 group-hover:scale-100"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                      // className="object-cover scale-110 transition-transform duration-300 group-hover:scale-100"
                       unoptimized
                     />
                   </div>

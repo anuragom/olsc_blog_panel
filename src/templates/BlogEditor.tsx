@@ -57,10 +57,13 @@ export default function BlogEditor({
     initialMetaDescription,
   );
 
+  const topMarginClass = view === "preview" ? "mt-[70px]" : "mt-[35px]";
+
 
   return (
-    <div className="p-0">
-      <div className="mb-4 mt-[35px] flex justify-end gap-2">
+    <div className="p-10">
+      {/* <div className="mb-4 mt-[35px] flex justify-end gap-2 relative z-50"> */}
+      <div className={`mb-4 flex justify-end gap-2 relative z-50 ${topMarginClass}`}>
         <button
           onClick={() => setView("editor")}
           className={`rounded px-4 py-2 font-semibold ${
