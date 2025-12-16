@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FaClock } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 
 import axiosInstance from "@/utils/axiosInstance";
@@ -34,6 +33,7 @@ interface Props {
   setMetaTitle: (_v: string) => void;
   metaDescription: string;
   setMetaDescription: (_v: string) => void;
+  website: string;
 }
 
 const blockOptions: { label: string; value: BlockType }[] = [
@@ -70,6 +70,7 @@ export default function BlogEditorForm({
   setMetaTitle,
   metaDescription,
   setMetaDescription,
+  website
 }: Props) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
@@ -177,11 +178,20 @@ export default function BlogEditorForm({
         );
         alert("✅ Blog updated successfully!");
       } else {
+        formData.append("website", website);
+        const formDataEntries = Array.from(formData.entries());
+
+    // 2. Convert the array of [key, value] pairs into a single object.
+    const formDataObject = Object.fromEntries(formDataEntries);
+    
+    console.log("--- FormData Contents Before Submission ---");
+    console.log(formDataObject);
         await axiosInstance.post(`${baseUrl}/blogs`, formData, {
         });
         alert("✅ Blog created successfully!");
       }
     } catch (err) {
+      console.error("Error submitting blog:", err);
       alert("Error submitting blog.");
     }
   };
@@ -192,52 +202,60 @@ export default function BlogEditorForm({
       className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg">
       <input
         placeholder="Title"
-        className="w-full rounded-xl border p-4 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+        // className="w-full rounded-xl border p-4 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required/>
       <textarea
         placeholder="Summary"
-        className="h-32 w-full rounded-xl border p-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        // className="h-32 w-full rounded-xl border p-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
         value={summary}
         onChange={(e) => setSummary(e.target.value)}/>
       <div className="grid grid-cols-2 gap-4">
         <input
           placeholder="Tags (comma separated)"
-          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          // className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
           value={tags}
           onChange={(e) => setTags(e.target.value)}/>
       </div>
       <div className="grid grid-cols-2 gap-4">
           <input
             placeholder="Categories (comma separated)"
-            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            // className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
             value={categories}
             onChange={(e) => setCategories(e.target.value)}
           />
           <input
             placeholder="Slug (leave empty to auto-generate from title)"
-            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            // className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
           />
           <input
             placeholder="Meta Title (used for SEO page title)"
-            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            // className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
             value={metaTitle}
             onChange={(e) => setMetaTitle(e.target.value)}
          />
          <textarea
             placeholder="Meta Description (used for SEO snippet)"
-            className="h-28 w-full rounded-xl border p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            // className="h-28 w-full rounded-xl border p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
             value={metaDescription}
             onChange={(e) => setMetaDescription(e.target.value)}/>
       </div>
       <div className="relative flex w-full flex-row items-center gap-3">
-        <FaClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        {/* <FaClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" /> */}
         <input
           placeholder="Estimated read time (mins)"
-          className="w-full rounded-xl border p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          // className="w-full rounded-xl border p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 placeholder-font-semibold"
           value={estimatedReadTime}
           onChange={(e) => setEstimatedReadTime(e.target.value)}
         />
@@ -292,7 +310,7 @@ export default function BlogEditorForm({
         type="submit"
         className="w-full rounded-xl bg-green-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-green-700"
       >
-        Publish Blog
+        Save Blog to Draft
       </button>
     </form>
   );

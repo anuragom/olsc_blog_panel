@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BsPencil } from "react-icons/bs";
 import { VscPreview } from "react-icons/vsc";
+import { IoIosHome } from "react-icons/io";
 
 import type { Block } from "../types";
 import BlogEditorForm from "./BlogEditorForm";
@@ -20,6 +21,7 @@ interface BlogEditorProps {
   initialSlug?: string;
   initialMetaTitle?: string;
   initialMetaDescription?: string;
+  website?: string;
 }
 
 export default function BlogEditor({
@@ -36,6 +38,8 @@ export default function BlogEditor({
   initialSlug = "",
   initialMetaTitle = "",
   initialMetaDescription = "",
+  website,
+
 }: BlogEditorProps) {
   const [view, setView] = useState<"editor" | "preview">("editor");
   const [title, setTitle] = useState(initialTitle);
@@ -56,13 +60,14 @@ export default function BlogEditor({
   const [metaDescription, setMetaDescription] = useState(
     initialMetaDescription,
   );
-
+  const [websiteState] = useState(website || "");
   const topMarginClass = view === "preview" ? "mt-[70px]" : "mt-[35px]";
-
+if (!website) {
+    return <p className="p-10 text-red-600">Error: Website context is required to load editor.</p>;
+  }
 
   return (
     <div className="p-10">
-      {/* <div className="mb-4 mt-[35px] flex justify-end gap-2 relative z-50"> */}
       <div className={`mb-4 flex justify-end gap-2 relative z-50 ${topMarginClass}`}>
         <button
           onClick={() => setView("editor")}
@@ -84,7 +89,7 @@ export default function BlogEditor({
           onClick={() => (window.location.href = `/`)}
           className="rounded bg-blue-500 px-4 py-2 font-semibold text-white"
         >
-          Go to all blogs
+          <IoIosHome /> Go to Home
         </button>
       </div>
 
@@ -113,6 +118,7 @@ export default function BlogEditor({
           setMetaTitle={setMetaTitle}
           metaDescription={metaDescription}
           setMetaDescription={setMetaDescription}
+          website={websiteState}
         />
       ) : (
         <BlogPreview
@@ -131,6 +137,7 @@ export default function BlogEditor({
           setMetaTitle={setMetaTitle}
           metaDescription={metaDescription}
           setMetaDescription={setMetaDescription}
+          website={websiteState}
         />
       )}
     </div>

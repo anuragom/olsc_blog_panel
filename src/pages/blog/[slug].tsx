@@ -10,7 +10,7 @@ import axiosInstance from "@/utils/axiosInstance";
 
 export default function EditBlogPage() {
   const router = useRouter();
-  const { slug } = router.query;
+  const { slug,website } = router.query;
 
   const [loading, setLoading] = useState(true);
   const [initialData, setInitialData] = useState<{
@@ -27,9 +27,12 @@ export default function EditBlogPage() {
     slug: string;
     metaTitle: string;
     metaDescription: string;
+    website: string;
   } | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const currentWebsite = Array.isArray(website) ? website[0] : website; 
+  
 
   useEffect(() => {
     if (!slug) return;
@@ -57,6 +60,7 @@ export default function EditBlogPage() {
           slug: blog.slug,
           metaTitle: blog.metaTitle,
           metaDescription: blog.metaDescription,
+          website: blog.website || currentWebsite,
         });
         setLoading(false);
       })
@@ -68,6 +72,9 @@ export default function EditBlogPage() {
 
   if (loading || !initialData)
     return <p className="mt-20 text-center">Loading blog...</p>;
+
+  if (!currentWebsite) 
+     return <p className="mt-20 text-center text-red-600">Error: Website context missing for editing.</p>;
 
   return (
     <>
@@ -87,6 +94,7 @@ export default function EditBlogPage() {
           initialSlug={Array.isArray(slug) ? slug[0] : slug}
           initialMetaTitle={initialData.metaTitle}
           initialMetaDescription={initialData.metaDescription}
+          website={currentWebsite }
         />
       </div>
       <Footer />

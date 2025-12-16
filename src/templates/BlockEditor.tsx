@@ -178,11 +178,6 @@ export default function BlockEditor({
             className="mb-2"
           />
           {block.data.url && (
-            // <img
-            //   src={block.data.url}
-            //   alt="preview"
-            //   className="mt-2 max-h-60 rounded-lg border shadow"
-            // />
             <div className="relative mt-2 h-60 w-full rounded-lg border shadow">
     <Image
       src={block.data.url}

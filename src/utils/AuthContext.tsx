@@ -4,11 +4,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import axiosInstance from "./axiosInstance";
 
+export type UserRole = 'SuperAdmin' | 'sanjvikAdmin' | 'olscAdmin' | null;
 interface AuthContextType {
   isLoggedIn: boolean;
   login: (_userName: string, _password: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  userRole: UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,14 +18,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const router = useRouter();
+
+  const fetchUser = async (): Promise<UserRole> => {
+    try {
+      const response = await axiosInstance.get("/auth/me");
+      const role = response.data.user.role as UserRole;
+      setUserRole(role);
+      return role;
+    } catch (err) {
+      console.error("Failed to fetch user details:", err);
+      setUserRole(null);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Try refreshing token silently
         await axiosInstance.post("/auth/refresh-token", {});
         setIsLoggedIn(true);
+        await fetchUser();
       } catch (err) {
         console.warn("Session expired or not logged in");
         setIsLoggedIn(false);
@@ -42,6 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       if (response.status === 200) {
         setIsLoggedIn(true);
+        await fetchUser();
         router.push("/");
       }
     } catch (err: any) {
@@ -58,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.warn("Logout request failed:", err);
     } finally {
       setIsLoggedIn(false);
+      setUserRole(null);
       router.push("/login");
     }
   };
@@ -74,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, loading }}>
+    <AuthContext.Provider value={{ isLoggedIn, login, logout, loading , userRole}}>
       {children}
     </AuthContext.Provider>
   );

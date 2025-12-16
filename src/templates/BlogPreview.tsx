@@ -697,6 +697,7 @@ interface BlogPreviewProps {
   setMetaTitle: (_v: string) => void;
   metaDescription: string;
   setMetaDescription: (_v: string) => void;
+  website?: string;
 }
 
 interface RecentBlog {
@@ -750,6 +751,7 @@ export default function BlogPreview({
   slug,
   metaTitle,
   metaDescription,
+  website,
 }: BlogPreviewProps) {
   const [activeSection] = useState<string>("");
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
@@ -824,7 +826,7 @@ export default function BlogPreview({
     const fetchRecentBlogs = async () => {
       try {
         const res = await axiosInstance.get(
-          `${baseUrl}/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc`,
+          `${baseUrl}/blogs?page=1&limit=4&sortBy=createdAt&sortOrder=desc&website=${website}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -1056,15 +1058,14 @@ export default function BlogPreview({
           )}
 
           {/* Summary */}
-          {summary && (
+          {/* {summary && (
             <div className="rounded-3xl border border-gray-100 bg-white/80 p-6 text-center shadow backdrop-blur-md">
               <p className="text-lg italic leading-relaxed text-gray-700">
                 “{summary}”
               </p>
             </div>
-          )}
+          )} */}
 
-          {/* ... (Tags section is commented out in original code) ... */}
 
           <div className="space-y-8 rounded-3xl bg-white p-4 sm:p-0 md:p-2 lg:p-4 shadow-lg">
             {blocks.map((block) => (
@@ -1199,12 +1200,8 @@ export default function BlogPreview({
           </div>
         </main>
 
-        {/* Right Sidebar: Recent Blogs - WIDTH REDUCED & CLEANED UP */}
         <aside
-          // Original: className="sticky hidden xl:block top-[6rem] hidden h-[calc(100vh-6rem)] w-1/4 overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
-          // New: w-1/4 changed to fixed w-[250px]
           className="sticky top-[6rem] hidden h-[calc(100vh-6rem)] w-[275px] overflow-y-auto border-l border-gray-100 bg-white/70 p-8 shadow-inner backdrop-blur-lg xl:block"
-
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#074B83 #f1f1f1",
