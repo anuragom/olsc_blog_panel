@@ -92,7 +92,7 @@ export default function BlockEditor({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-medium capitalize text-gray-700">
           {block.type}
