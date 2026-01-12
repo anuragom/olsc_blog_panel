@@ -199,7 +199,7 @@ export default function BlogEditorForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg">
+      className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-4 shadow-lg">
       <input
         placeholder="Title"
         // className="w-full rounded-xl border p-4 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"

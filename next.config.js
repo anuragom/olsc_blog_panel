@@ -18,12 +18,12 @@ module.exports = withBundleAnalyzer({
       {
         protocol: "http",
         hostname: backendHost,
-        port: "5000", // 👈 your Express backend port
-        pathname: "/api/blogs/**", // 👈 allow all image paths
+        port: "5000",
+        pathname: "/api/blogs/**",
       },
       {
         protocol: "https",
-        hostname: "yourdomain.com", // 👈 for production
+        hostname: "yourdomain.com",
         pathname: "/**",
       },
     ],
