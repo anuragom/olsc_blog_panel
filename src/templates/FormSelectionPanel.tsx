@@ -67,6 +67,8 @@ export const FormSelectionPanel = () => {
               onClick={() => {
                 if (form.key === "enquiry") router.push("/enquiry");
                 else if (form.key === "retail_and_franchise") router.push("/applications");
+                else if (form.key === "career") router.push("/careers");
+                else if (form.key === "institute") router.push("/institutes");
                 else console.log(form.key);
               }}
             />
