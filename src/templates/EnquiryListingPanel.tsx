@@ -426,6 +426,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   const fetchData = async (page = 1) => {
     setLoading(true);
     try {
+      console.log(isDetailLoading)
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",

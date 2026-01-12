@@ -18,6 +18,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
   const fetchData = async (page = 1) => {
     setLoading(true);
     try {
+      console.log(setStatusFilter)
       const res = await axiosInstance.get(`/forms/institute?page=${page}&search=${searchTerm}&status=${statusFilter}`);
       setData(res.data.data);
       setPagination(res.data.pagination);
