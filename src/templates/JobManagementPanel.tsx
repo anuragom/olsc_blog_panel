@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 import { toast } from "react-hot-toast";
-import { HiOutlineBriefcase, HiOutlineLocationMarker, HiOutlineUserGroup, HiX } from "react-icons/hi";
+import { HiOutlineBriefcase, HiOutlineLocationMarker, HiX } from "react-icons/hi";
 
 interface Job {
   _id: string;

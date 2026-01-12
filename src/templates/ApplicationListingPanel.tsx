@@ -369,12 +369,9 @@ import { useAuth } from "@/utils/AuthContext";
 import { 
   HiOutlineDownload, 
   HiOutlineArrowLeft, 
-  HiOutlineLocationMarker, 
   HiOutlineMail, 
   HiOutlinePhone, 
   HiOutlineHome, 
-  HiOutlineCalendar,
-  HiOutlineUser,
   HiChevronLeft,
   HiChevronRight,
   HiX
