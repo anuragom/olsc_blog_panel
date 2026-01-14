@@ -1,68 +1,3 @@
-// import React from "react";
-
-// import { useState } from "react";
-
-// import { useAuth } from "../utils/AuthContext";
-
-// export default function LoginPage() {
-//   const { login } = useAuth();
-//   const [userName, setUserName] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     await login(userName, password);
-//     setLoading(false);
-//   };
-
-//   return (
-//     <div className="flex min-h-screen items-center justify-center bg-[#074B83]">
-//       <div className="w-96 rounded-2xl bg-white p-8 shadow-lg">
-//         <h1 className="mb-6 text-center text-3xl font-bold text-[#074B83]">
-//           Welcome Back
-//         </h1>
-//         <form onSubmit={handleSubmit} className="space-y-5">
-//           <div>
-//             <label className="mb-2 block font-semibold text-gray-700">
-//               Username
-//             </label>
-//             <input
-//               type="text"
-//               className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-[#074B83]"
-//               value={userName}
-//               onChange={(e) => setUserName(e.target.value)}
-//               placeholder="Enter your username"
-//             />
-//           </div>
-//           <div>
-//             <label className="mb-2 block font-semibold text-gray-700">
-//               Password
-//             </label>
-//             <input
-//               type="password"
-//               className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-[#074B83]"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               placeholder="Enter your password"
-//             />
-//           </div>
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="w-full rounded-lg bg-[#EE222F] py-2 font-semibold text-white transition-all hover:bg-red-700 disabled:opacity-70"
-//           >
-//             {loading ? "Logging in..." : "Login"}
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
 'use client';
 
 import React, { useState } from "react";
@@ -86,9 +21,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      {/* Left Panel: Immersive Brand Identity */}
       <div className="relative hidden w-1/2 flex-col justify-between bg-[#074B83] p-16 lg:flex">
-        {/* Animated Background Mesh */}
         <div className="absolute inset-0 opacity-20" 
              style={{ backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`, backgroundSize: '40px 40px' }}>
         </div>
@@ -123,15 +56,13 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex gap-8 text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400">
           <span>Enterprise Grade</span>
-          <span className="text-[#EE222F]">///</span>
+          <span className="text-[#EE222F]"></span>
           <span>Secure Access</span>
         </div>
       </div>
 
-      {/* Right Panel: Workstation */}
       <div className="flex w-full flex-col items-center justify-center px-8 lg:w-1/2">
-        <div className="w-full max-w-[420px]">
-          {/* Mobile Logo Only */}
+        <div className="w-full max-w-[420px]">\
           <div className="mb-12 flex items-center gap-3 lg:hidden">
             <Image src="/assets/Om.png" alt="Logo" width={40} height={40} />
             <span className="text-xl font-black tracking-tighter text-[#074B83]">OLSC <span className="text-[#EE222F]">PANEL</span></span>
