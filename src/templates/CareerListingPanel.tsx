@@ -364,6 +364,9 @@ interface CareerApp {
   relocation: string;
   jobId?: any;
   createdAt: string;
+  processingStatus: 'pending' | 'completed' | 'failed' | 'stuck';
+  processingError?: string;
+
 }
 
 export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => void, onManageJobs: () => void }) => {
@@ -374,6 +377,8 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
   const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalSuccesses, setTotalSuccesses] = useState(1);
+  const [totalFailures, setTotalFailures] = useState(1);
   const [selectedApp, setSelectedApp] = useState<CareerApp | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -395,6 +400,8 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
       setData(res.data.data);
       setTotalPages(res.data.pagination.totalPages);
       setCurrentPage(res.data.pagination.page);
+      setTotalSuccesses(res.data.pagination.totalSuccesses || 0);
+      setTotalFailures(res.data.pagination.totalFailures || 0);
     } catch (error) {
       toast.error("Failed to load applications");
     } finally {
@@ -516,8 +523,24 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
           </div>
           
           <div className="flex flex-col md:flex-row items-center gap-4">
-             {/* Download CSV Button */}
-             <button 
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Total Success
+              </p>
+              <h2 className="text-3xl font-bold text-slate-900 bg-green-50 px-4 py-2 rounded-2xl inline-block">
+                {totalSuccesses}
+              </h2>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Total Failures
+              </p>
+              <h2 className="text-3xl font-bold text-slate-900 bg-red-50 px-4 py-2 rounded-2xl inline-block">
+                {totalFailures}
+              </h2>
+            </div>
+            {/* Download CSV Button */}
+            <button
               onClick={downloadCSV}
               className="flex items-center gap-2 px-6 py-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold text-sm hover:bg-emerald-100 transition-all border border-emerald-100 shadow-sm"
             >
@@ -573,6 +596,7 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
                 <th className="px-8 py-5">Position</th>
                 <th className="px-8 py-5">Experience</th>
                 <th className="px-8 py-5">Status</th>
+                <th className="px-8 py-5">Processing Status</th>
                 <th className="px-8 py-5 text-right">Action</th>
               </tr>
             </thead>
@@ -616,6 +640,11 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
                         {app.status}
                       </span>
                     )}
+                  </td>
+                  <td className="px-8 py-6 text-xs font-bold text-slate-400">
+                    {app.processingStatus
+                      ? app.processingStatus.toUpperCase()
+                      : "COMPLETED"}
                   </td>
                   <td className="px-8 py-6 text-right">
                     <button onClick={(e) => handleDownload(e, app._id)} className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all">

@@ -11,7 +11,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<any>(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalSuccesses: 0, totalFailures: 0   });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -55,6 +55,24 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
             </button>
             <h1 className="text-5xl font-extralight text-slate-900 tracking-tighter">Institute <span className="font-medium text-blue-600">Admissions</span></h1>
           </div>
+          
+          <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Total Success
+              </p>
+              <h2 className="text-3xl font-bold text-slate-900 bg-green-50 px-4 py-2 rounded-2xl inline-block">
+                {pagination.totalSuccesses}
+              </h2>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Total Failures
+              </p>
+              <h2 className="text-3xl font-bold text-slate-900 bg-red-50 px-4 py-2 rounded-2xl inline-block">
+                {pagination.totalFailures}
+              </h2>
+            </div>
+
           <div className="w-full md:w-96 relative group">
             <input placeholder="Search by name, email or phone..." className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none text-slate-900 font-medium" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             <HiOutlineSearch className="absolute right-6 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
@@ -68,6 +86,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
                 <th className="px-8 py-5">Applicant</th>
                 <th className="px-8 py-5">Academic (High School)</th>
                 <th className="px-8 py-5">Status</th>
+                <th className="px-8 py-5">Processing Status</th>
                 <th className="px-8 py-5 text-right">Action</th>
               </tr>
             </thead>
@@ -91,6 +110,11 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
                       <option value="admitted">ADMITTED</option>
                       <option value="rejected">REJECTED</option>
                     </select>
+                  </td>
+                  <td className="px-8 py-6 text-xs font-bold text-slate-400">
+                    {item.processingStatus
+                      ? item.processingStatus.toUpperCase()
+                      : "COMPLETED"}
                   </td>
                   <td className="px-8 py-6 text-right">
                     <button onClick={e => handleDownload(e, item._id)} className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all">
