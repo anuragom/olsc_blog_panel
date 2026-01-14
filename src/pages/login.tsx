@@ -62,7 +62,7 @@ export default function LoginPage() {
       </div>
 
       <div className="flex w-full flex-col items-center justify-center px-8 lg:w-1/2">
-        <div className="w-full max-w-[420px]">\
+        <div className="w-full max-w-[420px]">
           <div className="mb-12 flex items-center gap-3 lg:hidden">
             <Image src="/assets/Om.png" alt="Logo" width={40} height={40} />
             <span className="text-xl font-black tracking-tighter text-[#074B83]">OLSC <span className="text-[#EE222F]">PANEL</span></span>
