@@ -9,7 +9,7 @@ if (process.env.ANALYZE === "true") {
   }
 }
 
-const backendHost = process.env.NEXT_PUBLIC_API_BASE;
+// const backendHost = process.env.NEXT_PUBLIC_API_BASE;
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
@@ -17,7 +17,7 @@ module.exports = withBundleAnalyzer({
     remotePatterns: [
       {
         protocol: "http",
-        hostname: backendHost,
+        hostname: "blogspaneluat.omlogistics.co.in",
         port: "5000",
         pathname: "/api/blogs/**",
       },
