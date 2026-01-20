@@ -9,7 +9,7 @@ if (process.env.ANALYZE === "true") {
   }
 }
 
-const backendHost = process.env.NEXT_PUBLIC_API_BASE;
+const backendHost = process.env.NEXT_PUBLIC_API_BASE || "blogspaneluat.omlogistics.co.in";
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
