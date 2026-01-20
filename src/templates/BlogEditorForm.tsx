@@ -78,7 +78,7 @@ export default function BlogEditorForm({
     {},
   );
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://blogspaneluat.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://blogspaneluat.omlogistics.co.in/api";
 
   const addBlock = (type: BlockType) => {
     const newBlock: Block = {

@@ -654,7 +654,7 @@ export default function BlogPreview({
 }: BlogPreviewProps) {
   // const [activeSection] = useState<string>("");
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://blogspaneluat.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://blogspaneluat.omlogistics.co.in/api";
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
