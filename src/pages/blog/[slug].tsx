@@ -114,7 +114,7 @@ export default function EditBlogPage() {
   const [loading, setLoading] = useState(true);
   const [initialData, setInitialData] = useState<any | null>(null);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://blogspaneluat.omlogistics.co.in/api";
   const currentWebsite = Array.isArray(website) ? website[0] : website; 
 
   useEffect(() => {

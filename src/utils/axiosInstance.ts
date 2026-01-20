@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a single axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://blogspaneluat.omlogistics.co.in/api",
   withCredentials: true, // send cookies on every request
 });
 

@@ -475,7 +475,7 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
 
   const handleDownload = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/forms/careers/${id}/download`, "_blank");
+    window.open(`http://blogspaneluat.omlogistics.co.in/api/forms/careers/${id}/download`, "_blank");
   };
 
   const copyToClipboard = (text: string) => {
