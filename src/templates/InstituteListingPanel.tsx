@@ -32,7 +32,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const handleDownload = (e: any, id: string) => {
     e.stopPropagation();
-    window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/forms/institute/${id}/download`, "_blank");
+    window.open(`http://blogspaneluat.omlogistics.co.in:104/api/forms/institute/${id}/download`, "_blank");
   };
 
   const handleStatusChange = async (e: any, id: string) => {
