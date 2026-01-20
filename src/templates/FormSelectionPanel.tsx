@@ -29,6 +29,11 @@ export const FormSelectionPanel = () => {
       title: "Institute Forms",
       description: "Om Institute joining Forms management.",
     },
+    {
+      key: "pickup",
+      title: "Pickup Request Forms",
+      description: "Pickup Request form entries",
+    },
   ];
 
   return (
@@ -69,6 +74,7 @@ export const FormSelectionPanel = () => {
                 else if (form.key === "retail_and_franchise") router.push("/applications");
                 else if (form.key === "career") router.push("/careers");
                 else if (form.key === "institute") router.push("/institutes");
+                else if (form.key === "pickup") router.push("/pickup");
                 else console.log(form.key);
               }}
             />
