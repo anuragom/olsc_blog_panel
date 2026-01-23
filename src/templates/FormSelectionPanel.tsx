@@ -1,40 +1,56 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/router";
 import { FormCard } from "@/components/FormCard";
 import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
+import { useAuth } from "@/utils/AuthContext";
 
 export const FormSelectionPanel = () => {
   const router = useRouter();
+  const { hasPermission } = useAuth();
 
-  const formConfig = [
+  // 1. Map each form module to its required permission
+  const formConfig = useMemo(() => [
     {
       key: "enquiry",
       title: "Enquiry Forms",
       description: "Centralized management of customer service and service-specific queries.",
+      requiredPermission: "enquiry:read",
+      route: "/enquiry"
     },
     {
       key: "retail_and_franchise",
       title: "Retail and Franchise Forms",
       description: "Submission tracking and analytics for retail and Franchise Forms.",
+      requiredPermission: "retails:read", 
+      route: "/applications"
     },
     {
       key: "career",
       title: "Career Forms",
       description: "Recruitment portal data and employment inquiry processing.",
+      requiredPermission: "career:read",
+      route: "/careers"
     },
     {
       key: "institute",
       title: "Institute Forms",
       description: "Om Institute joining Forms management.",
+      requiredPermission: "institute:read",
+      route: "/institutes"
     },
     {
       key: "pickup",
       title: "Pickup Request Forms",
       description: "Pickup Request form entries",
+      requiredPermission: "pickup:read",
+      route: "/pickup"
     },
-  ];
+  ], []);
+
+  // 2. Filter the cards based on user permissions
+  const visibleForms = formConfig.filter(form => hasPermission(form.requiredPermission));
 
   return (
     <div className="relative flex flex-col min-h-screen bg-white overflow-hidden">
@@ -63,22 +79,23 @@ export const FormSelectionPanel = () => {
         </div>
 
         <div className="flex flex-wrap gap-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-          {formConfig.map((form) => (
-            <FormCard
-              key={form.key}
-              title={form.title}
-              description={form.description}
-              imageUrl="/assets/Om.png"
-              onClick={() => {
-                if (form.key === "enquiry") router.push("/enquiry");
-                else if (form.key === "retail_and_franchise") router.push("/applications");
-                else if (form.key === "career") router.push("/careers");
-                else if (form.key === "institute") router.push("/institutes");
-                else if (form.key === "pickup") router.push("/pickup");
-                else console.log(form.key);
-              }}
-            />
-          ))}
+          {visibleForms.length > 0 ? (
+            visibleForms.map((form) => (
+              <FormCard
+                key={form.key}
+                title={form.title}
+                description={form.description}
+                imageUrl="/assets/Om.png"
+                onClick={() => router.push(form.route)}
+              />
+            ))
+          ) : (
+            <div className="w-full py-20 text-center border-2 border-dashed border-slate-100 rounded-[3rem]">
+              <p className="text-slate-400 font-bold tracking-widest uppercase text-xs">
+                No modules authorized for this session
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
