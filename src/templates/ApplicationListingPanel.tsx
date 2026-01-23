@@ -38,17 +38,27 @@ interface Application {
 }
 
 export const ApplicationListingPanel = ({ onBack }: { onBack: () => void }) => {
-  const { userRole } = useAuth();
+  // --- UPDATED: Use the new user object and permission helper ---
+  const { hasPermission } = useAuth();
+  
   const [data, setData] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0, totalSuccesses: 0, totalFailures: 0   });
+  const [pagination, setPagination] = useState({ 
+    page: 1, 
+    totalPages: 1, 
+    total: 0, 
+    totalSuccesses: 0, 
+    totalFailures: 0   
+  });
 
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const isSuperAdmin = userRole === "SuperAdmin";
+  // --- UPDATED: Logic based on granular permissions ---
+  const canEditStatus = hasPermission("forms:edit");
+  // const canDelete = hasPermission("forms:delete");
 
   const fetchData = async (page = 1) => {
     setLoading(true);
@@ -96,7 +106,11 @@ export const ApplicationListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>, id: string) => {
     e.stopPropagation();
-    if (!isSuperAdmin) return;
+    // Use the granular permission check
+    if (!canEditStatus) {
+      toast.error("You do not have permission to update status");
+      return;
+    }
     try {
       await axiosInstance.patch(`/forms/apply/${id}/status`, { status: e.target.value });
       toast.success("Status Updated");
@@ -170,9 +184,9 @@ export const ApplicationListingPanel = ({ onBack }: { onBack: () => void }) => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={5} className="py-24 text-center text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase text-blue-600">Syncing Applications...</td></tr>
+                <tr><td colSpan={6} className="py-24 text-center text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase text-blue-600">Syncing Applications...</td></tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan={5} className="py-24 text-center text-slate-400 italic">No records found.</td></tr>
+                <tr><td colSpan={6} className="py-24 text-center text-slate-400 italic">No records found.</td></tr>
               ) : data.map((item) => (
                 <tr
                   key={item._id}
@@ -192,7 +206,8 @@ export const ApplicationListingPanel = ({ onBack }: { onBack: () => void }) => {
                     </span>
                   </td>
                   <td className="px-8 py-6" onClick={(e) => e.stopPropagation()}>
-                    {isSuperAdmin ? (
+                    {/* UPDATED: Dynamic status UI based on permissions */}
+                    {canEditStatus ? (
                       <select
                         value={item.status}
                         onChange={(e) => handleStatusChange(e, item._id)}

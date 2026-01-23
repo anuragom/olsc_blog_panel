@@ -7,22 +7,43 @@ import { HiOutlineDownload, HiOutlineArrowLeft, HiOutlineMail, HiOutlinePhone, H
 import { toast } from "react-hot-toast";
 
 export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
-  const { userRole } = useAuth();
+  // --- UPDATED: Using new user object and permission helper ---
+  const { user, hasPermission } = useAuth();
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<any>(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalSuccesses: 0, totalFailures: 0   });
+  const [pagination, setPagination] = useState({ 
+    page: 1, 
+    totalPages: 1, 
+    totalSuccesses: 0, 
+    totalFailures: 0   
+  });
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter] = useState("");
+
+  // --- UPDATED: Derived permissions for logic ---
+  const canEditStatus = hasPermission("institute:edit") || user?.role === "SuperAdmin";
+  const canDownload = hasPermission("institute:download") || user?.role === "SuperAdmin";
 
   const fetchData = async (page = 1) => {
     setLoading(true);
     try {
-      console.log(setStatusFilter)
-      const res = await axiosInstance.get(`/forms/institute?page=${page}&search=${searchTerm}&status=${statusFilter}`);
+      // Optimized: Using axiosInstance handles baseURL and credentials
+      const res = await axiosInstance.get(`/forms/institute`, {
+        params: {
+          page,
+          search: searchTerm,
+          status: statusFilter
+        }
+      });
       setData(res.data.data);
       setPagination(res.data.pagination);
-    } catch (error) { toast.error("Failed to load"); } finally { setLoading(false); }
+    } catch (error) { 
+      toast.error("Failed to load applications"); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => {
@@ -32,17 +53,28 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const handleDownload = (e: any, id: string) => {
     e.stopPropagation();
-    window.open(`https://blogspaneluat.omlogistics.co.in/api/forms/institute/${id}/download`, "_blank");
+    if (!canDownload) {
+        toast.error("Insufficient permissions to download files");
+        return;
+    }
+    // Updated: Ensuring we use the environment variable for consistent routing
+    window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/forms/institute/${id}/download`, "_blank");
   };
 
   const handleStatusChange = async (e: any, id: string) => {
     e.stopPropagation();
-    if (userRole !== "SuperAdmin") return;
+    // Granular permission check
+    if (!canEditStatus) {
+      toast.error("You do not have permission to update status");
+      return;
+    }
     try {
       await axiosInstance.patch(`/forms/institute/${id}/status`, { status: e.target.value });
       toast.success("Status Updated");
       fetchData(pagination.page);
-    } catch (error) { toast.error("Update failed"); }
+    } catch (error) { 
+      toast.error("Update failed"); 
+    }
   };
 
   return (
@@ -56,22 +88,16 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
             <h1 className="text-5xl font-extralight text-slate-900 tracking-tighter">Institute <span className="font-medium text-blue-600">Admissions</span></h1>
           </div>
           
-          <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
-                Total Success
-              </p>
-              <h2 className="text-3xl font-bold text-slate-900 bg-green-50 px-4 py-2 rounded-2xl inline-block">
-                {pagination.totalSuccesses}
-              </h2>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Success</p>
+                <h2 className="text-3xl font-bold text-slate-900 bg-green-50 px-4 py-2 rounded-2xl inline-block">{pagination.totalSuccesses}</h2>
             </div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
-                Total Failures
-              </p>
-              <h2 className="text-3xl font-bold text-slate-900 bg-red-50 px-4 py-2 rounded-2xl inline-block">
-                {pagination.totalFailures}
-              </h2>
+            <div className="text-center">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Failures</p>
+                <h2 className="text-3xl font-bold text-slate-900 bg-red-50 px-4 py-2 rounded-2xl inline-block">{pagination.totalFailures}</h2>
             </div>
+          </div>
 
           <div className="w-full md:w-96 relative group">
             <input placeholder="Search by name, email or phone..." className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none text-slate-900 font-medium" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
@@ -92,7 +118,9 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={4} className="py-24 text-center animate-pulse font-bold tracking-widest text-xs uppercase text-blue-600">Syncing Applications...</td></tr>
+                <tr><td colSpan={6} className="py-24 text-center animate-pulse font-bold tracking-widest text-xs uppercase text-blue-600">Syncing Applications...</td></tr>
+              ) : data.length === 0 ? (
+                <tr><td colSpan={6} className="py-24 text-center text-slate-400 italic">No applications found.</td></tr>
               ) : data.map((item: any) => (
                 <tr key={item._id} onClick={() => setSelectedApp(item)} className="hover:bg-blue-50/30 transition-all cursor-pointer group">
                   <td className="px-8 py-6">
@@ -104,17 +132,22 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
                     <div className="text-[10px] text-slate-400 font-black uppercase">{item.board} • {item.percentageObtained}%</div>
                   </td>
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
-                    <select value={item.status} disabled={userRole !== "SuperAdmin"} onChange={e => handleStatusChange(e, item._id)} className="text-[10px] font-black rounded-lg border-none px-3 py-1.5 bg-white shadow-sm ring-1 ring-slate-100 text-blue-600 uppercase">
-                      <option value="new">NEW</option>
-                      <option value="reviewed">REVIEWED</option>
-                      <option value="admitted">ADMITTED</option>
-                      <option value="rejected">REJECTED</option>
-                    </select>
+                    {/* UPDATED: Dynamic status select based on permissions */}
+                    {canEditStatus ? (
+                      <select value={item.status} onChange={e => handleStatusChange(e, item._id)} className="text-[10px] font-black rounded-lg border-none px-3 py-1.5 bg-white shadow-sm ring-1 ring-slate-100 text-blue-600 uppercase cursor-pointer outline-none">
+                        <option value="new">NEW</option>
+                        <option value="reviewed">REVIEWED</option>
+                        <option value="admitted">ADMITTED</option>
+                        <option value="rejected">REJECTED</option>
+                      </select>
+                    ) : (
+                      <span className="text-[10px] font-black uppercase text-blue-600 px-3 py-1.5 rounded-lg bg-blue-50">
+                        {item.status}
+                      </span>
+                    )}
                   </td>
                   <td className="px-8 py-6 text-xs font-bold text-slate-400">
-                    {item.processingStatus
-                      ? item.processingStatus.toUpperCase()
-                      : "COMPLETED"}
+                    {item.processingStatus ? item.processingStatus.toUpperCase() : "COMPLETED"}
                   </td>
                   <td className="px-8 py-6 text-right">
                     <button onClick={e => handleDownload(e, item._id)} className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all">
@@ -131,8 +164,8 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
         <div className="mt-10 flex items-center justify-between px-6 font-black uppercase tracking-[0.2em] text-[10px]">
           <p className="text-slate-400">Page <span className="text-slate-900">{pagination.page}</span> of <span className="text-slate-900">{pagination.totalPages}</span></p>
           <div className="flex gap-3">
-            <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm"><HiChevronLeft className="inline mb-0.5" /> Previous</button>
-            <button disabled={pagination.page === pagination.totalPages} onClick={() => fetchData(pagination.page + 1)} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm">Next <HiChevronRight className="inline mb-0.5" /></button>
+            <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm transition-all hover:bg-slate-50"><HiChevronLeft className="inline mb-0.5" /> Previous</button>
+            <button disabled={pagination.page === pagination.totalPages} onClick={() => fetchData(pagination.page + 1)} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm transition-all hover:bg-slate-50">Next <HiChevronRight className="inline mb-0.5" /></button>
           </div>
         </div>
       </div>
@@ -141,7 +174,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
       {selectedApp && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setSelectedApp(null)}></div>
-          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] shadow-2xl p-10 md:p-14 text-slate-900">
+          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[3rem] shadow-2xl p-10 md:p-14 text-slate-900 border border-white">
             <button onClick={() => setSelectedApp(null)} className="absolute top-8 right-8 p-3 bg-slate-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all"><HiX size={24} /></button>
             <div className="mb-10">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-2">Admission Dossier</p>
@@ -151,7 +184,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
                     <span className="flex items-center gap-2"><HiOutlinePhone className="text-blue-500" /> {selectedApp.contactNo}</span>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-12 border-t border-slate-100 pt-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-100 pt-10">
                 <div className="space-y-6">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Academic History</h4>
                     <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100">
@@ -171,7 +204,9 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personal Details</h4>
                     <p><span className="text-slate-400">Father's Name:</span> {selectedApp.fathersName}</p>
                     <p><span className="text-slate-400">Address:</span> {selectedApp.currentAddress}, {selectedApp.city}, {selectedApp.state}</p>
-                    <button onClick={e => handleDownload(e, selectedApp._id)} className="w-full mt-6 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-slate-900 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2"><HiOutlineDownload /> Download Marksheet</button>
+                    <button onClick={e => handleDownload(e, selectedApp._id)} className="w-full mt-6 px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-slate-900 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2">
+                        <HiOutlineDownload /> Download Marksheet
+                    </button>
                 </div>
             </div>
           </div>

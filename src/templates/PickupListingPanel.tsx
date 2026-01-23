@@ -17,7 +17,6 @@ import {
 } from "react-icons/hi";
 import { toast } from "react-hot-toast";
 
-// Matches your IPickupRequest Schema
 interface PickupRequest {
   _id: string;
   consignor_fullName: string;
@@ -29,25 +28,26 @@ interface PickupRequest {
   consignee_address: string;
   consignee_pinCode: string;
   pickup_expectedDate: string;
-  pickup_pickupTime: string;      // Added to fix Line 202 & 327
+  pickup_pickupTime: string;      
   pickup_pickupMode: string;
   pickup_loadType: string;
   product_totalWeight: number;
   product_numberOfBoxes: number;
   product_packagingType: string;
-  product_additionalNotes: string; // Added to fix Line 345
+  product_additionalNotes: string; 
   freight_mode: string;
   status: string;
   processingStatus: string;
   createdAt: string;
 }
+
 export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
-  const { userRole } = useAuth();
+  const { user, hasPermission } = useAuth();
+  
   const [data, setData] = useState<PickupRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   
-  // Filters
   const [statusFilter, setStatusFilter] = useState("");
   const [modeFilter, setModeFilter] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -56,7 +56,8 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const [selectedPickup, setSelectedPickup] = useState<PickupRequest | null>(null);
 
-  const canEditStatus = userRole === "SuperAdmin";
+  const canEditStatus = hasPermission("pickup:edit") || user?.role === "SuperAdmin";
+  const canExport = hasPermission("pickup:export") || user?.role === "SuperAdmin";
 
   const fetchData = async (page = 1) => {
     setLoading(true);
@@ -86,43 +87,85 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
     return () => clearTimeout(delayDebounceFn);
   }, [statusFilter, modeFilter, startDate, endDate, searchTerm]);
 
-  const handleStatusUpdate = async (id: string, newStatus: string) => {
-    try {
-      await axiosInstance.patch(`/forms/pickup/${id}/status`, { status: newStatus });
-      toast.success("Status Synchronized");
-      setData(prev => prev.map(item => item._id === id ? { ...item, status: newStatus } : item));
-    } catch (err) {
-      toast.error("Status update failed");
-    }
-  };
+  const handleStatusUpdate = async (
+  id: string,
+  newStatus: string
+): Promise<void> => {
+  if (!canEditStatus) {
+    toast.error("Unauthorized to update status");
+    return;
+  }
 
-  const downloadCSV = () => {
-    const headers = ["Date", "Consignor", "From Pincode", "Consignee", "To Pincode", "Weight", "Mode", "Status"];
-    const rows = data.map(item => [
-      new Date(item.createdAt).toLocaleDateString(),
-      item.consignor_fullName,
-      item.consignor_pinCode,
-      item.consignee_fullName,
-      item.consignee_pinCode,
-      item.product_totalWeight,
-      item.pickup_pickupMode,
-      item.status
-    ]);
-    
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Pickup_Requests_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-  };
+  try {
+    await axiosInstance.patch(
+      `/forms/pickup/${id}/status`,
+      { status: newStatus }
+    );
+
+    toast.success("Status Synchronized");
+
+    setData(prev =>
+      prev.map(item =>
+        item._id === id
+          ? { ...item, status: newStatus }
+          : item
+      )
+    );
+  } catch {
+    toast.error("Status update failed");
+  }
+};
+
+
+  const downloadCSV = (): void => {
+  if (!canExport) {
+    toast.error("Unauthorized to export data");
+    return;
+  }
+
+  const headers = [
+    "Date",
+    "Consignor",
+    "From Pincode",
+    "Consignee",
+    "To Pincode",
+    "Weight",
+    "Mode",
+    "Status",
+  ];
+
+  const rows = data.map(item => [
+    new Date(item.createdAt).toLocaleDateString(),
+    item.consignor_fullName,
+    item.consignor_pinCode,
+    item.consignee_fullName,
+    item.consignee_pinCode,
+    item.product_totalWeight,
+    item.pickup_pickupMode,
+    item.status,
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map(r => r.join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Pickup_Requests_${new Date()
+    .toISOString()
+    .split("T")[0]}.csv`;
+
+  a.click();
+};
 
   return (
     <div className="min-h-screen bg-white p-6 md:p-10 font-sans">
       <div className="max-w-[1600px] mx-auto">
         
-        {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
           <div>
             <button onClick={onBack} className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all mb-4">
@@ -134,9 +177,11 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
           </div>
 
           <div className="flex gap-4 w-full lg:w-auto">
-            <button onClick={downloadCSV} className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
-              <HiOutlineDownload size={18} /> Export Data
-            </button>
+            {canExport && (
+              <button onClick={downloadCSV} className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
+                <HiOutlineDownload size={18} /> Export Data
+              </button>
+            )}
             <div className="relative flex-1 lg:w-80">
               <HiOutlineSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
               <input 
@@ -150,7 +195,6 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-6 mb-8 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
           <div className="flex items-center gap-2 border-r border-slate-200 pr-6">
             <HiOutlineFilter className="text-blue-600" />
@@ -180,9 +224,8 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full">
+          <table className="w-full text-left">
             <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
               <tr>
                 <th className="px-8 py-6">Pickup Date</th>
@@ -225,11 +268,10 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                        <span className="bg-blue-50 px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter text-blue-600">{item.pickup_pickupMode}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
                     {canEditStatus ? (
                       <select 
                         value={item.status} 
-                        onClick={e => e.stopPropagation()}
                         onChange={e => handleStatusUpdate(item._id, e.target.value)}
                         className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg outline-none ring-1 transition-all ${
                           item.status === 'picked' ? 'bg-green-50 text-green-600 ring-green-200' :
@@ -251,7 +293,6 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="mt-10 flex items-center justify-between px-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Requests: {pagination.total}</p>
           <div className="flex gap-2">
@@ -273,11 +314,10 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {selectedPickup && (
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedPickup(null)}></div>
-          <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 overflow-y-auto border-l border-slate-100">
             <div className="p-12">
               <button onClick={() => setSelectedPickup(null)} className="mb-10 p-3 bg-slate-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all"><HiX size={24} /></button>
               
@@ -285,24 +325,22 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-10">Pickup Details</h2>
 
               <div className="space-y-10">
-                {/* Section: Route */}
                 <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
                   <div className="flex justify-between items-start mb-8">
                     <div className="flex items-center gap-4">
                       <HiOutlineLocationMarker className="text-blue-500" size={24} />
                       <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Route Information</h4>
                     </div>
-                    <span className="bg-white px-4 py-1.5 rounded-full text-[10px] font-black text-blue-600 border border-blue-100">{selectedPickup.pickup_loadType}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-10">
                     <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Origin (Consignor)</p>
+                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Origin</p>
                       <p className="font-bold text-slate-800 leading-tight mb-2">{selectedPickup.consignor_fullName}</p>
                       <p className="text-xs text-slate-500 font-medium">{selectedPickup.consignor_address}</p>
                       <p className="text-sm font-black text-blue-600 mt-2">{selectedPickup.consignor_pinCode}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Destination (Consignee)</p>
+                      <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Destination</p>
                       <p className="font-bold text-slate-800 leading-tight mb-2">{selectedPickup.consignee_fullName}</p>
                       <p className="text-xs text-slate-500 font-medium">{selectedPickup.consignee_address}</p>
                       <p className="text-sm font-black text-red-600 mt-2">{selectedPickup.consignee_pinCode}</p>
@@ -310,14 +348,12 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
 
-                {/* Section: Cargo */}
                 <div className="grid grid-cols-2 gap-6">
                   <div className="p-8 border border-slate-100 rounded-[2.5rem] flex items-center gap-5">
                     <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><HiOutlineCube size={28} /></div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Payload</p>
                       <p className="text-xl font-black text-slate-900">{selectedPickup.product_totalWeight} KG</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase">{selectedPickup.product_numberOfBoxes} Boxes</p>
                     </div>
                   </div>
                   <div className="p-8 border border-slate-100 rounded-[2.5rem] flex items-center gap-5">
@@ -325,27 +361,15 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-400">Schedule</p>
                       <p className="text-xl font-black text-slate-900">{new Date(selectedPickup.pickup_expectedDate).toLocaleDateString()}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase">{selectedPickup.pickup_pickupTime}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Section: Billing/Notes */}
-                <div className="space-y-6">
-                  <div className="flex justify-between border-b border-slate-50 pb-4">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Freight Mode</span>
-                    <span className="text-xs font-black text-slate-900 uppercase">{selectedPickup.freight_mode}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-4">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Transport Mode</span>
-                    <span className="text-xs font-black text-slate-900 uppercase">{selectedPickup.pickup_pickupMode}</span>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Operator Notes</span>
-                    <p className="text-sm font-medium text-slate-600 bg-slate-50 p-6 rounded-2xl italic">
-                      {selectedPickup.product_additionalNotes || "No special instructions provided by consignor."}
+                <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Product Instructions</p>
+                    <p className="text-sm font-medium text-slate-700 italic">
+                        "{selectedPickup.product_additionalNotes || 'Standard handling procedure.'}"
                     </p>
-                  </div>
                 </div>
               </div>
             </div>
