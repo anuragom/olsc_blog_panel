@@ -39,7 +39,7 @@ const BlogListingPanel = ({ website }: BlogListingPanelProps) => {
 
   const { user, hasPermission } = useAuth();
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://blogspaneluat.omlogistics.co.in/api";
 
   const canPublish = hasPermission("blog:publish") || user?.role === "SuperAdmin";
   const canDelete = hasPermission("blog:delete") || user?.role === "SuperAdmin";

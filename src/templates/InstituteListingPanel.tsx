@@ -58,7 +58,7 @@ export const InstituteListingPanel = ({ onBack }: { onBack: () => void }) => {
         return;
     }
     // Updated: Ensuring we use the environment variable for consistent routing
-    window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/forms/institute/${id}/download`, "_blank");
+    window.open(`https://blogspaneluat.omlogistics.co.in/api/forms/institute/${id}/download`, "_blank");
   };
 
   const handleStatusChange = async (e: any, id: string) => {

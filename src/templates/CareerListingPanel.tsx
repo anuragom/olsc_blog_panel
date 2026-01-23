@@ -150,7 +150,7 @@ export const CareerListingPanel = ({ onBack, onManageJobs }: { onBack: () => voi
   const handleDownload = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     // Optimized: Use axiosInstance to get a temporary URL or process download
-    window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/forms/careers/${id}/download`, "_blank");
+    window.open(`https://blogspaneluat.omlogistics.co.in/api/forms/careers/${id}/download`, "_blank");
   };
 
   const copyToClipboard = (text: string) => {
