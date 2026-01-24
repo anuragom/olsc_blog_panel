@@ -64,7 +64,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10",
+        limit: "100",
         ...(statusFilter && { status: statusFilter }),
         ...(modeFilter && { pickupMode: modeFilter }),
         ...(startDate && { startDate }),
