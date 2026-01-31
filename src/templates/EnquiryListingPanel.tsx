@@ -72,7 +72,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/forms`, {
-        params: { page, limit: 10, serviceName, status: statusFilter, search: searchTerm, startDate, endDate }
+        params: { page, limit: 100, serviceName, status: statusFilter, search: searchTerm, startDate, endDate }
       });
       setData(response.data.data);
       setPagination(response.data.pagination);
@@ -131,7 +131,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
     return;
   }
 
-  const headers = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Remarks", "Message"];
+  const headers = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message", "Remarks"];
   
   const csvRows = data.map(item => [
     new Date(item.createdAt).toLocaleDateString(),
@@ -140,8 +140,8 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
     item.phone,
     item.serviceName,
     item.status.toUpperCase(),
-    `"${(item.remarks || "").replace(/"/g, '""')}"`,
-    `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`
+    `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+    `"${(item.remarks || "").replace(/"/g, '""')}"`
   ]);
 
   const csvContent = [headers.join(","), ...csvRows.map(row => row.join(","))].join("\n");
@@ -150,10 +150,10 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   const link = document.createElement("a");
   link.href = url;
   link.download = `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`;
-  document.body.appendChild(link); // Good practice to append to body
+  document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link); // Clean up
-  URL.revokeObjectURL(url); // Free up memory
+  document.body.removeChild(link); 
+  URL.revokeObjectURL(url);
 };
 
   return (
