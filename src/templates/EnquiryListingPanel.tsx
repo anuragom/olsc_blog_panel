@@ -7,7 +7,7 @@ import {
   HiX, HiOutlineArrowLeft,
   HiOutlineSearch, HiOutlineMail,
   HiOutlinePhone, HiOutlineCalendar,
-  HiOutlineUserCircle, HiOutlineClipboardList,
+  HiOutlineUserCircle,
   HiOutlineDownload, HiOutlineFilter, HiXCircle, HiOutlineChatAlt,
   HiCheckCircle, HiRefresh,
   HiChevronLeft,
@@ -126,35 +126,35 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   };
 
   const downloadCSV = () => {
-  if (data.length === 0) {
-    toast.error("No data available");
-    return;
-  }
+    if (data.length === 0) {
+      toast.error("No data available");
+      return;
+    }
 
-  const headers = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message", "Remarks"];
-  
-  const csvRows = data.map(item => [
-    new Date(item.createdAt).toLocaleDateString(),
-    `"${(item.fullName || "").replace(/"/g, '""')}"`,
-    item.email,
-    item.phone,
-    item.serviceName,
-    item.status.toUpperCase(),
-    `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`,
-    `"${(item.remarks || "").replace(/"/g, '""')}"`
-  ]);
+    const headers = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message", "Remarks"];
 
-  const csvContent = [headers.join(","), ...csvRows.map(row => row.join(","))].join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link); 
-  URL.revokeObjectURL(url);
-};
+    const csvRows = data.map(item => [
+      new Date(item.createdAt).toLocaleDateString(),
+      `"${(item.fullName || "").replace(/"/g, '""')}"`,
+      item.email,
+      item.phone,
+      item.serviceName,
+      item.status.toUpperCase(),
+      `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+      `"${(item.remarks || "").replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(","), ...csvRows.map(row => row.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-white p-6 md:p-10 font-sans">
@@ -304,17 +304,18 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3"><HiOutlineClipboardList className="text-blue-600" size={20} /><h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Query & Context</h4></div>
-                  <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                    <p className="text-[10px] font-black text-blue-600 uppercase mb-3">Topic: {selectedEnquiry.query}</p>
-                    <p className="text-sm font-medium text-slate-700 leading-relaxed italic">"{selectedEnquiry.message}"</p>
-                  </div>
+                <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                  <p className="text-[10px] font-black text-blue-600 uppercase mb-3">Topic: {selectedEnquiry.query}</p>
+                  <p className="text-sm font-medium text-slate-700 leading-relaxed italic break-words whitespace-pre-wrap">
+                    "{selectedEnquiry.message}"
+                  </p>
                 </div>
 
                 <div className="bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 shadow-inner">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2 font-black uppercase"><HiOutlineChatAlt size={18} /> Official Audit Note</h4>
-                  <p className="text-sm font-bold text-slate-700 leading-relaxed italic">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2 font-black uppercase">
+                    <HiOutlineChatAlt size={18} /> Official Audit Note
+                  </h4>
+                  <p className="text-sm font-bold text-slate-700 leading-relaxed italic break-words whitespace-pre-wrap">
                     {selectedEnquiry.remarks || "No administrative notes recorded yet."}
                   </p>
                 </div>
