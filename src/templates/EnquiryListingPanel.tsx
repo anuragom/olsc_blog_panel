@@ -11,9 +11,20 @@ import {
   HiOutlineDownload, HiOutlineFilter, HiXCircle, HiOutlineChatAlt,
   HiCheckCircle, HiRefresh,
   HiChevronLeft,
-  HiChevronRight
+  HiChevronRight,
+  HiPlus,
+  HiOutlineClock,
+  HiOutlinePencilAlt
 } from "react-icons/hi";
 import { toast } from "react-hot-toast";
+
+interface Remark {
+  _id?: string;
+  text: string;
+  createdBy: string;
+  createdAt: string;
+  fullName: string;
+}
 
 interface Enquiry {
   _id: string;
@@ -24,7 +35,7 @@ interface Enquiry {
   query: string;
   message: string;
   status: string;
-  remarks?: string;
+  remarks: Remark[];
   createdAt: string;
 }
 
@@ -41,9 +52,13 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // States for confirmation UI
   const [savingId, setSavingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [activeInputId, setActiveInputId] = useState<string | null>(null);
+
+  // States for editing existing remarks
+  const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -93,33 +108,54 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
       await axiosInstance.patch(`/forms/${enquiry._id}/status`, { status: newStatus });
       toast.success(`Status updated for ${enquiry.fullName}`);
       setData(prev => prev.map(item => item._id === enquiry._id ? { ...item, status: newStatus } : item));
+      if (selectedEnquiry?._id === enquiry._id) setSelectedEnquiry({ ...selectedEnquiry, status: newStatus });
     } catch { toast.error("Failed to update status"); }
   };
 
-  const handleTableRemarkUpdate = async (item: Enquiry, newValue: string) => {
-    const originalValue = item.remarks || "";
-    if (newValue === originalValue) return;
+  const handleAddRemark = async (item: Enquiry, newValue: string) => {
+    if (!newValue.trim()) {
+      setActiveInputId(null);
+      return;
+    }
     if (!canEditEnquiry(item.serviceName)) return;
 
     setSavingId(item._id);
     try {
-      await axiosInstance.put(`/forms/${item._id}`, { remarks: newValue });
+      const response = await axiosInstance.put(`/forms/${item._id}`, { remarks: newValue });
+      const updatedEnquiry = response.data.data;
 
-      setData(prev => prev.map(i => i._id === item._id ? { ...i, remarks: newValue } : i));
+      setData(prev => prev.map(i => i._id === item._id ? updatedEnquiry : i));
+      if (selectedEnquiry?._id === item._id) setSelectedEnquiry(updatedEnquiry);
 
       setSuccessId(item._id);
-      const actionType = originalValue === "" ? "Added" : "Updated";
-      toast.success(
-        <div className="flex flex-col">
-          <span className="font-bold">Remarks {actionType}</span>
-          <span className="text-xs opacity-80">{item.fullName} ({item.email})</span>
-        </div>,
-        { id: `save-${item._id}`, duration: 3000 }
-      );
+      setActiveInputId(null);
+      toast.success("Remark Saved");
 
       setTimeout(() => setSuccessId(null), 2000);
     } catch (err) {
-      toast.error(`Failed to save remarks for ${item.fullName}`);
+      toast.error(`Failed to add remark`);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleUpdateRemark = async (enquiryId: string, remarkId: string, updatedText: string) => {
+    if (!updatedText.trim()) {
+      setEditingRemarkId(null);
+      return;
+    }
+    setSavingId(enquiryId);
+    try {
+      const response = await axiosInstance.patch(`/forms/${enquiryId}/remarks/${remarkId}`, { text: updatedText });
+      const updatedEnquiry = response.data.data;
+
+      setData(prev => prev.map(i => i._id === enquiryId ? updatedEnquiry : i));
+      if (selectedEnquiry?._id === enquiryId) setSelectedEnquiry(updatedEnquiry);
+
+      setEditingRemarkId(null);
+      toast.success("Remark Updated");
+    } catch (err) {
+      toast.error("Failed to update remark");
     } finally {
       setSavingId(null);
     }
@@ -131,25 +167,46 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
       return;
     }
 
-    const headers = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message", "Remarks"];
+    const baseHeaders = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message"];
+    const remarkHeaders = Array.from({ length: 20 }, (_, i) => `Remark ${i + 1}`);
+    const headers = [...baseHeaders, ...remarkHeaders];
 
-    const csvRows = data.map(item => [
-      new Date(item.createdAt).toLocaleDateString(),
-      `"${(item.fullName || "").replace(/"/g, '""')}"`,
-      item.email,
-      item.phone,
-      item.serviceName,
-      item.status.toUpperCase(),
-      `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`,
-      `"${(item.remarks || "").replace(/"/g, '""')}"`
-    ]);
+    const csvRows = data.map(item => {
+      const rowData = [
+        new Date(item.createdAt).toLocaleDateString(),
+        `"${(item.fullName || "").replace(/"/g, '""')}"`,
+        item.email,
+        item.phone,
+        item.serviceName,
+        item.status.toUpperCase(),
+        `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`
+      ];
+      const sortedRemarks = [...(item.remarks || [])].reverse();
 
-    const csvContent = [headers.join(","), ...csvRows.map(row => row.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+      for (let i = 0; i < 20; i++) {
+        const r = sortedRemarks[i];
+        if (r) {
+          const dateValue = r.createdAt ? new Date(r.createdAt) : new Date();
+          const timestamp = dateValue.toLocaleString('en-GB', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+          });
+          const rName = r.fullName || "N/A";
+          const rText = r.text || "";
+          const remarkString = `name : ${rName}, time: ${timestamp}, remarks: ${rText}`;
+          rowData.push(`"${remarkString.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+        } else {
+          rowData.push("");
+        }
+      }
+      return rowData.join(",");
+    });
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute("download", `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -159,7 +216,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   return (
     <div className="min-h-screen bg-white p-6 md:p-10 font-sans">
       <div className="max-w-[1600px] mx-auto">
-        {/* Header */}
+        {/* Header Section */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
           <div>
             <button onClick={onBack} className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all mb-4">
@@ -180,17 +237,17 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters Section */}
         <div className="flex flex-wrap items-center gap-6 mb-8 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
           <div className="flex items-center gap-2 border-r border-slate-200 pr-6">
             <HiOutlineFilter className="text-blue-600" />
             <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Filters</span>
           </div>
-          <select value={serviceName} onChange={e => setServiceName(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none">
+          <select value={serviceName} onChange={e => setServiceName(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none cursor-pointer">
             <option value="">Authorized Services</option>
             {allowedServices.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none cursor-pointer">
             <option value="">Status Filter</option>
             <option value="new">NEW</option>
             <option value="contacted">CONTACTED</option>
@@ -204,36 +261,42 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Table View */}
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
+        {/* Table Section */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
+          <table className="w-full text-left min-w-[1200px] table-fixed">
             <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
               <tr>
-                <th className="px-8 py-6">Submission</th>
-                <th className="px-8 py-6">Applicant</th>
-                <th className="px-8 py-6">Service</th>
-                <th className="px-8 py-6">Status</th>
-                <th className="px-8 py-6 w-1/4">Internal Remarks</th>
+                <th className="px-8 py-6 w-[120px]">Submission</th>
+                <th className="px-8 py-6 w-[200px]">Applicant</th>
+                <th className="px-8 py-6 w-[150px]">Service</th>
+                <th className="px-8 py-6 w-[140px]">Status</th>
+                <th className="px-8 py-6 w-[400px]">Internal Remarks History</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={5} className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-blue-500 animate-pulse">Syncing...</td></tr>
+                <tr><td colSpan={5} className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-blue-500 animate-pulse">Syncing Database...</td></tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan={5} className="py-20 text-center text-slate-400 italic">No authorized records found.</td></tr>
+                <tr><td colSpan={5} className="py-20 text-center text-slate-400 italic">No records found.</td></tr>
               ) : data.map((item) => (
-                <tr key={item._id} onClick={() => setSelectedEnquiry(item)} className="group hover:bg-blue-50/20 cursor-pointer transition-all">
-                  <td className="px-8 py-6 text-xs font-black text-slate-400">{new Date(item.createdAt).toLocaleDateString('en-GB')}</td>
+                <tr key={item._id} onClick={() => setSelectedEnquiry(item)} className="group hover:bg-blue-50/20 cursor-pointer transition-all align-top">
+                  <td className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase leading-tight">
+                    {new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-slate-800 uppercase group-hover:text-blue-600 transition-colors">{item.fullName}</span>
+                      <span className="text-sm font-black text-slate-800 uppercase group-hover:text-blue-600 transition-colors truncate">{item.fullName}</span>
                       <span className="text-[10px] font-bold text-slate-400">{item.phone}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6"><span className="bg-blue-50 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase text-blue-600">{item.serviceName.replace('_', ' ')}</span></td>
+                  <td className="px-8 py-6">
+                    <span className="bg-blue-50 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase text-blue-600 whitespace-nowrap">
+                      {item.serviceName.replace('_', ' ')}
+                    </span>
+                  </td>
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
                     {canEditEnquiry(item.serviceName) ? (
-                      <select value={item.status} onChange={e => handleStatusChange(item, e.target.value)} className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none ring-1 ring-slate-100 bg-white">
+                      <select value={item.status} onChange={e => handleStatusChange(item, e.target.value)} className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none ring-1 ring-slate-100 bg-white cursor-pointer hover:ring-blue-300 transition-all">
                         <option value="new">NEW</option>
                         <option value="contacted">CONTACTED</option>
                         <option value="resolved">RESOLVED</option>
@@ -241,25 +304,85 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                     ) : <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{item.status}</span>}
                   </td>
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
-                    {canEditEnquiry(item.serviceName) ? (
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          defaultValue={item.remarks}
-                          onBlur={(e) => handleTableRemarkUpdate(item, e.target.value)}
-                          placeholder="Add administrative note..."
-                          className={`w-full border-none rounded-xl px-4 py-2.5 text-xs font-bold transition-all placeholder:text-slate-300 shadow-sm
-                              ${successId === item._id ? 'bg-emerald-50 ring-2 ring-emerald-500 pr-10' : 'bg-slate-50 focus:ring-1 focus:ring-blue-500'}
-                            `}
-                        />
-                        <div className="absolute right-3">
-                          {savingId === item._id && <HiRefresh className="w-4 h-4 text-blue-500 animate-spin" />}
-                          {successId === item._id && <HiCheckCircle className="w-5 h-5 text-emerald-500 animate-bounce" />}
-                        </div>
+                    <div className="flex flex-col gap-3">
+                      {/* Remarks List View */}
+                      <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                        {item.remarks && item.remarks.length > 0 ? (
+                          [...item.remarks].reverse().map((rem, idx) => {
+                            const isOwner = user?.userId === rem.createdBy;
+                            const isEditing = editingRemarkId === rem._id;
+
+                            return (
+                              <div key={idx} className={`p-3 rounded-xl border border-slate-100 group/remark ${isOwner ? 'bg-blue-50/30' : 'bg-slate-50/80'}`}>
+                                <div className="flex UserDatajustify-between items-center mb-1">
+                                  <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter flex items-center gap-1">
+                                    {rem.fullName || 'User'} {isOwner && <HiOutlinePencilAlt size={10} className="text-slate-400" />}
+                                  </span>
+                                  <span className="text-[8px] text-slate-300 font-bold">{new Date(rem.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                {isOwner && isEditing ? (
+                                  <input
+                                    autoFocus
+                                    className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-1 ring-blue-500 rounded p-1"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleUpdateRemark(item._id, rem._id!, editValue);
+                                      if (e.key === 'Escape') setEditingRemarkId(null);
+                                    }}
+                                    onBlur={() => handleUpdateRemark(item._id, rem._id!, editValue)}
+                                  />
+                                ) : (
+                                  <p
+                                    onClick={() => { if (isOwner && rem._id) { setEditingRemarkId(rem._id); setEditValue(rem.text); } }}
+                                    className={`text-[11px] font-bold text-slate-600 leading-snug break-all ${isOwner ? 'cursor-edit hover:text-blue-600' : ''}`}
+                                  >
+                                    {rem.text}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <span className="text-[10px] text-slate-300 italic font-medium">No notes recorded</span>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-xs text-slate-500 italic font-medium truncate max-w-[220px]">{item.remarks || "No notes"}</p>
-                    )}
+
+                      {/* Add Button/Input */}
+                      {/* Add Button/Input - Only show if user has write access */}
+                      {canEditEnquiry(item.serviceName) && (
+                        <>
+                          {activeInputId === item._id ? (
+                            <div className="relative">
+                              <input
+                                autoFocus
+                                type="text"
+                                placeholder="Type and press Enter..."
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleAddRemark(item, e.currentTarget.value);
+                                  if (e.key === 'Escape') setActiveInputId(null);
+                                }}
+                                onBlur={(e) => handleAddRemark(item, e.target.value)}
+                                className="w-full bg-white border-none rounded-xl px-4 py-2.5 text-xs font-bold ring-2 ring-blue-500 shadow-xl"
+                              />
+                              {savingId === item._id && <HiRefresh className="absolute right-3 top-3 w-4 h-4 text-blue-500 animate-spin" />}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setActiveInputId(item._id)}
+                              className="flex items-center gap-2 w-fit px-3 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-500 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest"
+                            >
+                              <HiPlus size={12} /> Add Remark
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {successId === item._id && (
+                        <div className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase animate-pulse">
+                          <HiCheckCircle /> Saved
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -267,16 +390,14 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
           </table>
         </div>
 
+        {/* Pagination Section */}
         <div className="mt-10 flex items-center justify-between px-6">
-          {pagination?.total > 100 ? (
-            <div className="flex items-center gap-2"><HiOutlineCalendar className="text-slate-300" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing 100 out of {pagination?.total}</span></div>
-          ) : <div className="flex items-center gap-2"><HiOutlineCalendar className="text-slate-300" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing {pagination?.total} out of {pagination?.total}</span></div>}
+          <div className="flex items-center gap-2"><HiOutlineCalendar className="text-slate-300" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Records Found: {pagination?.total}</span></div>
           <div className="flex gap-2">
             <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 disabled:opacity-30 transition-all"><HiChevronLeft size={20} /></button>
             <button disabled={pagination.page === pagination.totalPages} onClick={() => fetchData(pagination.page + 1)} className="p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 disabled:opacity-30 transition-all"><HiChevronRight size={20} /></button>
           </div>
         </div>
-
       </div>
 
       {/* Detail Sidebar Modal */}
@@ -286,38 +407,71 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
           <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 overflow-y-auto border-l border-slate-100">
             <div className="p-12">
               <button onClick={() => setSelectedEnquiry(null)} className="mb-10 p-3 bg-slate-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all"><HiX size={24} /></button>
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Inquiry Dossier</p>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-10">Submission Details</h2>
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Submission Dossier</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-10">Inquiry Profile</h2>
 
               <div className="space-y-10">
                 <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
                   <div className="flex items-center gap-5 mb-8">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100"><HiOutlineUserCircle size={32} /></div>
                     <div>
-                      <p className="text-2xl font-black text-slate-900 tracking-tight">{selectedEnquiry.fullName}</p>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight break-all">{selectedEnquiry.fullName}</p>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedEnquiry.serviceName.replace('_', ' ')}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-2xl border border-slate-50 flex items-center gap-3"><HiOutlineMail className="text-blue-500" /><span className="text-xs font-bold truncate">{selectedEnquiry.email}</span></div>
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-3"><HiOutlinePhone className="text-blue-500" /><span className="text-xs font-bold">{selectedEnquiry.phone}</span></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-50 flex items-center gap-3 overflow-hidden">
+                      <HiOutlineMail className="text-blue-500 shrink-0" />
+                      <span className="text-xs font-bold truncate break-all">{selectedEnquiry.email}</span>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-3">
+                      <HiOutlinePhone className="text-blue-500 shrink-0" />
+                      <span className="text-xs font-bold">{selectedEnquiry.phone}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                  <p className="text-[10px] font-black text-blue-600 uppercase mb-3">Topic: {selectedEnquiry.query}</p>
-                  <p className="text-sm font-medium text-slate-700 leading-relaxed italic break-words whitespace-pre-wrap">
+                  <p className="text-[10px] font-black text-blue-600 uppercase mb-3">Customer Message</p>
+                  <p className="text-sm font-medium text-slate-700 leading-relaxed italic break-all whitespace-pre-wrap">
                     "{selectedEnquiry.message}"
                   </p>
                 </div>
 
-                <div className="bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 shadow-inner">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2 font-black uppercase">
-                    <HiOutlineChatAlt size={18} /> Official Audit Note
-                  </h4>
-                  <p className="text-sm font-bold text-slate-700 leading-relaxed italic break-words whitespace-pre-wrap">
-                    {selectedEnquiry.remarks || "No administrative notes recorded yet."}
-                  </p>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <HiOutlineChatAlt size={18} /> Administrative Log ({selectedEnquiry.remarks?.length || 0})
+                    </h4>
+                  </div>
+
+                  {selectedEnquiry.remarks && selectedEnquiry.remarks.length > 0 ? (
+                    <div className="space-y-4 relative before:absolute before:left-6 before:top-0 before:bottom-0 before:w-px before:bg-slate-100">
+                      {[...selectedEnquiry.remarks].reverse().map((rem, idx) => (
+                        <div key={idx} className="relative pl-12">
+                          <div className="absolute left-[20px] top-2 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white z-10"></div>
+                          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-[10px] font-black text-slate-900 uppercase">
+                                {rem?.fullName || "Staff"}
+                              </span>
+                              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                                <HiOutlineClock />
+                                {new Date(rem.createdAt).toLocaleString()}
+                              </div>
+                            </div>
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed break-all whitespace-pre-wrap">
+                              {rem.text}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 p-8 rounded-[2rem] border border-dashed border-slate-200 text-center text-slate-400 italic text-xs font-bold">
+                      No administrative logs found.
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-10 border-t border-slate-50 flex justify-between items-center">
