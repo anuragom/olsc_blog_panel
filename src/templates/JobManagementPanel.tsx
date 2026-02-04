@@ -30,7 +30,7 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
     title: "",
     location: "",
     jobType: "Full-time",
-    company: "OM Logistics Ltd.",
+    company: "OM Logistics Supply Chain Pvt Ltd",
     profile: "Operations",
     experienceRequired: "",
     ctc: "",
@@ -76,12 +76,12 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
         <button onClick={onBack} className="text-xs font-black uppercase tracking-widest text-gray-400 mb-8 hover:text-blue-600 transition-colors">
           ← Back to Applications
         </button>
-        
+
         <div className="flex justify-between items-center mb-12">
           <h1 className="text-4xl font-extralight tracking-tighter text-slate-900">
             Manage <span className="font-medium text-blue-600">Job Postings</span>
           </h1>
-          <button 
+          <button
             onClick={() => setShowAddForm(!showAddForm)}
             className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${showAddForm ? 'bg-red-50 text-red-600' : 'bg-slate-900 text-white hover:bg-blue-600'}`}
           >
@@ -95,23 +95,23 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Basic Info</label>
-                <input placeholder="Job Title" className="w-full mt-1 p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required onChange={e => setFormData({...formData, title: e.target.value})} />
-                <input placeholder="Location" className="w-full mt-3 p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required onChange={e => setFormData({...formData, location: e.target.value})} />
+                <input placeholder="Job Title" className="w-full mt-1 p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                <input placeholder="Location" className="w-full mt-3 p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required onChange={e => setFormData({ ...formData, location: e.target.value })} />
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Classification</label>
-                <select className="w-full mt-1 p-3 bg-gray-50 border-none rounded-xl outline-none" onChange={e => setFormData({...formData, jobType: e.target.value})}>
+                <select className="w-full mt-1 p-3 bg-gray-50 border-none rounded-xl outline-none" onChange={e => setFormData({ ...formData, jobType: e.target.value })}>
                   <option value="Full-time">Full-time</option>
                   <option value="Internship">Internship</option>
                   <option value="Part-time">Part-time</option>
                   <option value="Contractual">Contractual</option>
                 </select>
-                <select className="w-full mt-3 p-3 bg-gray-50 border-none rounded-xl outline-none" onChange={e => setFormData({...formData, profile: e.target.value})}>
+                <select className="w-full mt-3 p-3 bg-gray-50 border-none rounded-xl outline-none" onChange={e => setFormData({ ...formData, profile: e.target.value })}>
                   {[
-  'Sales_and_Marketing', 'Human_Resource', 'Corporate_Communications',
-  'Credit_Control', 'Purchase', 'Audit', 'Finance', 'Operations',
-  'Administration', 'Key_Operation_Manager', 'Civil_Procurement'
-].map(p => (
+                    'Sales_and_Marketing', 'Human_Resource', 'Corporate_Communications',
+                    'Credit_Control', 'Purchase', 'Audit', 'Finance', 'Operations',
+                    'Administration', 'Key_Operation_Manager', 'Civil_Procurement'
+                  ].map(p => (
                     <option key={p} value={p}>{p}</option>
                   ))}
                 </select>
@@ -119,17 +119,17 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <input placeholder="Experience (e.g. 3-5 years)" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({...formData, experienceRequired: e.target.value})} />
-              <input placeholder="CTC (e.g. 5-7 LPA)" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({...formData, ctc: e.target.value})} />
-              <input type="number" placeholder="Vacancies" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({...formData, vacancies: parseInt(e.target.value)})} />
+              <input placeholder="Experience (e.g. 3-5 years)" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({ ...formData, experienceRequired: e.target.value })} />
+              <input placeholder="CTC (e.g. 5-7 LPA)" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({ ...formData, ctc: e.target.value })} />
+              <input type="number" placeholder="Vacancies" className="p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({ ...formData, vacancies: parseInt(e.target.value) })} />
             </div>
 
-            <input placeholder="Qualification (e.g. B.Tech / Diploma)" className="w-full p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({...formData, qualification: e.target.value})} />
-            
-            <textarea placeholder="Job Description" className="w-full p-3 bg-gray-50 border-none rounded-xl h-32 outline-none" required onChange={e => setFormData({...formData, description: e.target.value})} />
-            
-            <textarea placeholder="Responsibilities (One per line)" className="w-full p-3 bg-gray-50 border-none rounded-xl h-32 outline-none" required onChange={e => setFormData({...formData, responsibilities: e.target.value})} />
-            
+            <input placeholder="Qualification (e.g. B.Tech / Diploma)" className="w-full p-3 bg-gray-50 border-none rounded-xl outline-none" required onChange={e => setFormData({ ...formData, qualification: e.target.value })} />
+
+            <textarea placeholder="Job Description" className="w-full p-3 bg-gray-50 border-none rounded-xl h-32 outline-none" required onChange={e => setFormData({ ...formData, description: e.target.value })} />
+
+            <textarea placeholder="Responsibilities (One per line)" className="w-full p-3 bg-gray-50 border-none rounded-xl h-32 outline-none" required onChange={e => setFormData({ ...formData, responsibilities: e.target.value })} />
+
             <button disabled={isSubmitting} type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-colors">
               {isSubmitting ? "Processing..." : "Publish Job Opening"}
             </button>
@@ -139,8 +139,8 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
         {/* --- JOB LIST --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {jobs.map((job) => (
-            <div 
-              key={job._id} 
+            <div
+              key={job._id}
               onClick={() => setSelectedJob(job)}
               className="group bg-white p-6 rounded-[2rem] border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300"
             >
@@ -165,8 +165,8 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedJob(null)}></div>
           <div className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-300">
-            
-            <button 
+
+            <button
               onClick={() => setSelectedJob(null)}
               className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
             >
@@ -202,7 +202,7 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
                   <p className="text-slate-500 text-sm leading-relaxed">{selectedJob.description}</p>
                 </div>
 
-                <div>
+                {/* <div>
                   <h4 className="text-sm font-black uppercase text-slate-900 mb-3 tracking-widest">Key Responsibilities</h4>
                   <ul className="space-y-3">
                     {selectedJob.responsibilities.map((item, idx) => (
@@ -212,6 +212,32 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
                       </li>
                     ))}
                   </ul>
+                </div> */}
+
+                {/* Replace the existing Key Responsibilities block with this */}
+                <div>
+                  <div className="space-y-6">
+                    {selectedJob.responsibilities.map((item, idx) => {
+                      // Check if item is a heading
+                      const isHeading = item.startsWith("<h>") && item.endsWith("</h>");
+
+                      if (isHeading) {
+                        const headingText = item.replace(/<\/?h>/g, "");
+                        return (
+                          <h4 key={idx} className="text-sm font-black uppercase text-slate-900 mt-6 mb-3 tracking-widest">
+                            {headingText}
+                          </h4>
+                        );
+                      }
+
+                      return (
+                        <li key={idx} className="flex gap-3 text-sm text-slate-500 list-none mb-3">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0"></span>
+                          {item}
+                        </li>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -219,9 +245,9 @@ export const JobManagementPanel = ({ onBack }: { onBack: () => void }) => {
                 <div className="flex items-center gap-2 text-gray-400 text-xs italic">
                   ID: {selectedJob._id}
                 </div>
-                <button 
-                   onClick={() => setSelectedJob(null)}
-                   className="px-8 py-3 bg-gray-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
+                <button
+                  onClick={() => setSelectedJob(null)}
+                  className="px-8 py-3 bg-gray-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
                 >
                   Close Detail
                 </button>
