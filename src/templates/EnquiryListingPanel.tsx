@@ -37,6 +37,8 @@ interface Enquiry {
   status: string;
   remarks: Remark[];
   createdAt: string;
+  assigned_to: string;
+  type_of_query: string;
 }
 
 export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
@@ -59,6 +61,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
   // States for editing existing remarks
   const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editValueAssignedTo, setEditValueAssignedTo] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -111,6 +114,33 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
       if (selectedEnquiry?._id === enquiry._id) setSelectedEnquiry({ ...selectedEnquiry, status: newStatus });
     } catch { toast.error("Failed to update status"); }
   };
+
+  const handleTypeOfQueryChange = async (enquiry: Enquiry, newType: string): Promise<void> => {
+    if (!canEditEnquiry(enquiry.serviceName)) {
+      toast.error("Unauthorized");
+      return;
+    }
+    try {
+      await axiosInstance.patch(`/forms/${enquiry._id}/assignment`, { type_of_query: newType });
+      toast.success(`Type updated for ${enquiry.fullName}`);
+      setData(prev => prev.map(item => item._id === enquiry._id ? { ...item, type_of_query: newType } : item));
+      if (selectedEnquiry?._id === enquiry._id) setSelectedEnquiry({ ...selectedEnquiry, type_of_query: newType });
+    } catch { toast.error("Failed to update type"); }
+  };
+
+  const handleAssignedToChange = async (enquiry: Enquiry, newAssignedTo: string): Promise<void> => {
+    if (!canEditEnquiry(enquiry.serviceName)) {
+      toast.error("Unauthorized");
+      return;
+    }
+    try {
+      await axiosInstance.patch(`/forms/${enquiry._id}/assignment`, { assigned_to: newAssignedTo });
+      toast.success(`Assigned To updated for ${enquiry.fullName}`);
+      setData(prev => prev.map(item => item._id === enquiry._id ? { ...item, assigned_to: newAssignedTo } : item));
+      if (selectedEnquiry?._id === enquiry._id) setSelectedEnquiry({ ...selectedEnquiry, assigned_to: newAssignedTo });
+    } catch { toast.error("Failed to update Assigned To"); }
+  };
+
 
   const handleAddRemark = async (item: Enquiry, newValue: string) => {
     if (!newValue.trim()) {
@@ -167,7 +197,7 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
       return;
     }
 
-    const baseHeaders = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message"];
+    const baseHeaders = ["Date", "Full Name", "Email", "Phone", "Service", "Status", "Message", "Type of Query", "Assigned To"];
     const remarkHeaders = Array.from({ length: 20 }, (_, i) => `Remark ${i + 1}`);
     const headers = [...baseHeaders, ...remarkHeaders];
 
@@ -179,7 +209,9 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
         item.phone,
         item.serviceName,
         item.status.toUpperCase(),
-        `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`
+        `"${(item.message || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+        item?.type_of_query?.toUpperCase() || "EMPTY",
+        item?.assigned_to || "Unassigned",
       ];
       const sortedRemarks = [...(item.remarks || [])].reverse();
 
@@ -215,6 +247,30 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   return (
     <div className="min-h-screen bg-white p-6 md:p-10 font-sans">
+      <style jsx global>{`
+  /* Main lean blue scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;  /* Vertical width */
+    height: 4px; /* Horizontal height - This fixes the bottom bar */
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3b82f6; 
+    border-radius: 10px;
+    border: 1px solid #f8fafc; /* Adds a tiny padding effect */
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #1d4ed8;
+  }
+  /* For Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #f8fafc;
+  }
+`}</style>
       <div className="max-w-[1600px] mx-auto">
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
@@ -267,10 +323,12 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
             <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
               <tr>
                 <th className="px-8 py-6 w-[120px]">Submission</th>
-                <th className="px-8 py-6 w-[200px]">Applicant</th>
+                <th className="px-8 py-6 w-[180px]">Applicant</th>
                 <th className="px-8 py-6 w-[150px]">Service</th>
                 <th className="px-8 py-6 w-[140px]">Status</th>
-                <th className="px-8 py-6 w-[400px]">Internal Remarks History</th>
+                <th className="px-8 py-6 w-[350px]">Internal Remarks History</th>
+                <th className="px-8 py-6 w-[150px]">Query Type</th>
+                <th className="px-8 py-6 w-[180px]">Assigned To</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -318,9 +376,9 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                                   <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter flex items-center gap-1">
                                     {rem.fullName || 'User'} {isOwner && <HiOutlinePencilAlt size={10} className="text-slate-400" />}
                                   </span>
-                                  <span className="text-[8px] text-slate-300 font-bold">{new Date(rem.createdAt).toLocaleDateString()}</span>
+                                  <span className="text-[8px] text-blue-600 font-bold">{new Date(rem.createdAt).toLocaleDateString()}</span>
                                 </div>
-                                {isOwner && isEditing ? (
+                                {isOwner && isEditing && canEditEnquiry(item.serviceName) ? (
                                   <input
                                     autoFocus
                                     className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-1 ring-blue-500 rounded p-1"
@@ -348,8 +406,6 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                         )}
                       </div>
 
-                      {/* Add Button/Input */}
-                      {/* Add Button/Input - Only show if user has write access */}
                       {canEditEnquiry(item.serviceName) && (
                         <>
                           {activeInputId === item._id ? (
@@ -383,6 +439,76 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                         </div>
                       )}
                     </div>
+                  </td>
+                  <td className="px-2 py-6" onClick={e => e.stopPropagation()}>
+                    {canEditEnquiry(item?.serviceName) ? (
+                      <select value={item?.type_of_query} onChange={e => handleTypeOfQueryChange(item, e.target.value)} className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none ring-1 ring-slate-100 bg-white cursor-pointer hover:ring-blue-300 transition-all">
+                        <option value="EMPTY"># EMPTY</option>
+                        <option value="BILL_COPY">BILL COPY</option>
+                        <option value="CORPORATE_COMMUNICATION">CORPORATE COMMUNICATION</option>
+                        <option value="DAMAGE">DAMAGE</option>
+                        <option value="DELIVERY_TRACKING">DELIVERY/TRACKING</option>
+                        <option value="EMPLOYEE_HR_RELATED">EMPLOYEE/HR RELATED</option>
+                        <option value="FRANCHISE_QUERY">FRANCHISE QUERY</option>
+                        <option value="LEGAL">LEGAL</option>
+                        <option value="NEW_BUSINESS_QUERY">NEW BUSINESS QUERY</option>
+                        <option value="OPERATION_RELATED">OPERATION RELATED</option>
+                        <option value="OTHER">OTHER</option>
+                        <option value="PAYMENTS">PAYMENTS</option>
+                        <option value="PICK_UP_RELATED">PICK UP RELATED</option>
+                        <option value="POD_RELATED">POD RELATED</option>
+                        <option value="TAX_RELATED">TAX RELATED</option>
+                        <option value="UNDELIVERED_SHIPMENTS">UNDELIVERED SHIPMENTS</option>
+                        <option value="VEHICLE_ATTACHMENT_RELATED">VEHICLE ATTACHMENT RELATED</option>
+                      </select>
+                    ) : <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{item.type_of_query}</span>}
+                  </td>
+
+                  <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
+                    {canEditEnquiry(item?.serviceName) ? (
+                      <div className="relative group/assign">
+                        {activeInputId === `${item._id}-assign` ? (
+                          <input
+                            autoFocus
+                            className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-2 ring-blue-500 rounded-lg p-2 shadow-lg"
+                            value={editValueAssignedTo}
+                            onChange={(e) => setEditValueAssignedTo(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleAssignedToChange(item, editValueAssignedTo);
+                                setActiveInputId(null);
+                              }
+                              if (e.key === 'Escape') {
+                                setActiveInputId(null);
+                                setEditValueAssignedTo("");
+                              }
+                            }}
+                            onBlur={() => {
+                              handleAssignedToChange(item, editValueAssignedTo);
+                              setActiveInputId(null);
+                            }}
+                            placeholder="Enter name..."
+                          />
+                        ) : (
+                          <div
+                            onClick={() => {
+                              setActiveInputId(`${item._id}-assign`);
+                              setEditValueAssignedTo(item?.assigned_to || "");
+                            }}
+                            className="flex items-center justify-between group-hover:bg-slate-50 p-2 rounded-lg transition-all cursor-text min-h-[32px]"
+                          >
+                            <span className={`text-[11px] font-bold ${item?.assigned_to ? 'text-slate-700' : 'text-slate-300 italic'}`}>
+                              {item?.assigned_to || "Click to assign..."}
+                            </span>
+                            <HiOutlinePencilAlt className="opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity" size={14} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                        {item?.assigned_to || "Unassigned"}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
