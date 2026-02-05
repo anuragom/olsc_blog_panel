@@ -326,8 +326,8 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                 <th className="px-8 py-6 w-[180px]">Applicant</th>
                 <th className="px-8 py-6 w-[150px]">Service</th>
                 <th className="px-8 py-6 w-[140px]">Status</th>
+                 <th className="px-8 py-6 w-[150px]">Query Type</th>
                 <th className="px-8 py-6 w-[350px]">Internal Remarks History</th>
-                <th className="px-8 py-6 w-[150px]">Query Type</th>
                 <th className="px-8 py-6 w-[180px]">Assigned To</th>
               </tr>
             </thead>
@@ -361,6 +361,32 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                       </select>
                     ) : <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{item.status}</span>}
                   </td>
+
+                  <td className="px-2 py-6" onClick={e => e.stopPropagation()}>
+                    {canEditEnquiry(item?.serviceName) ? (
+                      <select value={item?.type_of_query} onChange={e => handleTypeOfQueryChange(item, e.target.value)} className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none ring-1 ring-slate-100 bg-white cursor-pointer hover:ring-blue-300 transition-all">
+                        <option value="EMPTY"># EMPTY</option>
+                        <option value="BILL_COPY">BILL COPY</option>
+                        <option value="CORPORATE_COMMUNICATION">CORPORATE COMMUNICATION</option>
+                        <option value="DAMAGE">DAMAGE</option>
+                        <option value="DELIVERY_TRACKING">DELIVERY/TRACKING</option>
+                        <option value="EMPLOYEE_HR_RELATED">EMPLOYEE/HR RELATED</option>
+                        <option value="FRANCHISE_QUERY">FRANCHISE QUERY</option>
+                        <option value="LEGAL">LEGAL</option>
+                        <option value="NEW_BUSINESS_QUERY">NEW BUSINESS QUERY</option>
+                        <option value="OPERATION_RELATED">OPERATION RELATED</option>
+                        <option value="OTHER">OTHER</option>
+                        <option value="PAYMENTS">PAYMENTS</option>
+                        <option value="PICK_UP_RELATED">PICK UP RELATED</option>
+                        <option value="POD_RELATED">POD RELATED</option>
+                        <option value="TAX_RELATED">TAX RELATED</option>
+                        <option value="UNDELIVERED_SHIPMENTS">UNDELIVERED SHIPMENTS</option>
+                        <option value="VEHICLE_ATTACHMENT_RELATED">VEHICLE ATTACHMENT RELATED</option>
+                      </select>
+                    ) : <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{item.type_of_query}</span>}
+                  </td>
+
+
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
                     <div className="flex flex-col gap-3">
                       {/* Remarks List View */}
@@ -439,29 +465,6 @@ export const EnquiryListingPanel = ({ onBack }: { onBack: () => void }) => {
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td className="px-2 py-6" onClick={e => e.stopPropagation()}>
-                    {canEditEnquiry(item?.serviceName) ? (
-                      <select value={item?.type_of_query} onChange={e => handleTypeOfQueryChange(item, e.target.value)} className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none ring-1 ring-slate-100 bg-white cursor-pointer hover:ring-blue-300 transition-all">
-                        <option value="EMPTY"># EMPTY</option>
-                        <option value="BILL_COPY">BILL COPY</option>
-                        <option value="CORPORATE_COMMUNICATION">CORPORATE COMMUNICATION</option>
-                        <option value="DAMAGE">DAMAGE</option>
-                        <option value="DELIVERY_TRACKING">DELIVERY/TRACKING</option>
-                        <option value="EMPLOYEE_HR_RELATED">EMPLOYEE/HR RELATED</option>
-                        <option value="FRANCHISE_QUERY">FRANCHISE QUERY</option>
-                        <option value="LEGAL">LEGAL</option>
-                        <option value="NEW_BUSINESS_QUERY">NEW BUSINESS QUERY</option>
-                        <option value="OPERATION_RELATED">OPERATION RELATED</option>
-                        <option value="OTHER">OTHER</option>
-                        <option value="PAYMENTS">PAYMENTS</option>
-                        <option value="PICK_UP_RELATED">PICK UP RELATED</option>
-                        <option value="POD_RELATED">POD RELATED</option>
-                        <option value="TAX_RELATED">TAX RELATED</option>
-                        <option value="UNDELIVERED_SHIPMENTS">UNDELIVERED SHIPMENTS</option>
-                        <option value="VEHICLE_ATTACHMENT_RELATED">VEHICLE ATTACHMENT RELATED</option>
-                      </select>
-                    ) : <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{item.type_of_query}</span>}
                   </td>
 
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
