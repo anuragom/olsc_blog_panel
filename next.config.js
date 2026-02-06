@@ -9,7 +9,7 @@ if (process.env.ANALYZE === "true") {
   }
 }
 
-const backendHost = process.env.NEXT_PUBLIC_API_BASE;
+const backendHost = process.env.NEXT_PUBLIC_API_BASE || "blogspaneluat.omlogistics.co.in";
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
@@ -18,12 +18,12 @@ module.exports = withBundleAnalyzer({
       {
         protocol: "http",
         hostname: backendHost,
-        port: "5000", // 👈 your Express backend port
-        pathname: "/api/blogs/**", // 👈 allow all image paths
+        port: "5000",
+        pathname: "/api/blogs/**",
       },
       {
         protocol: "https",
-        hostname: "yourdomain.com", // 👈 for production
+        hostname: "yourdomain.com",
         pathname: "/**",
       },
     ],
