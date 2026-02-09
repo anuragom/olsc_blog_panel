@@ -751,24 +751,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -837,18 +819,19 @@ const blockOptions: { label: string; value: BlockType }[] = [
 
 export default function BlogEditorForm({
   blogId, title, setTitle, summary, setSummary, tags, setTags,
-  categories, setCategories,
-  blocks, setBlocks, estimatedReadTime,
-  slug, metaTitle, metaDescription,
+  categories, setCategories, coverPreview, setCoverPreview,
+  blocks, setBlocks, estimatedReadTime, setEstimatedReadTime,
+  slug, setSlug, metaTitle, setMetaTitle, metaDescription, setMetaDescription,
   website
 }: Props) {
-  const [coverFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
+  // Pointer sensor with distance helps differentiate between a "click" to type and a "drag" to move
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 }, 
@@ -893,13 +876,13 @@ export default function BlogEditorForm({
     setBlocks((prevBlocks) => prevBlocks.filter((b) => b.id !== _id));
   };
 
-  // const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (e.target.files && e.target.files[0]) {
-  //     const file = e.target.files[0];
-  //     setCoverFile(file);
-  //     setCoverPreview(URL.createObjectURL(file));
-  //   }
-  // };
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverFile(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleBlockFileSelect = (blockId: string, file: File) => {
     setImageFiles((prev) => ({ ...prev, [blockId]: file }));
@@ -910,36 +893,22 @@ export default function BlogEditorForm({
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append("title", title);
     formData.append("summary", summary || "");
-    formData.append(
-      "tags",
-      JSON.stringify(tags.split(",").map((t) => t.trim())),
-    );
-    formData.append(
-      "categories",
-      JSON.stringify(categories.split(",").map((t) => t.trim())),
-    );
+    formData.append("tags", JSON.stringify(tags.split(",").map((t) => t.trim())));
+    formData.append("categories", JSON.stringify(categories.split(",").map((t) => t.trim())));
     formData.append("estimatedReadTime", estimatedReadTime || "0");
-
     formData.append("slug", slug);
     formData.append("metaTitle", metaTitle);
     formData.append("metaDescription", metaDescription);
 
     if (coverFile) formData.append("coverImage", coverFile, coverFile.name);
-
-    Object.entries(imageFiles).forEach(([_, file]) => {
-      formData.append("images", file, file.name);
-    });
+    Object.entries(imageFiles).forEach(([_, file]) => { formData.append("images", file, file.name); });
 
     const blocksData = blocks.map((b) => {
       if (b.type === "image") {
-        return {
-          ...b,
-          data: { ...b.data, url: imagePreviews[b.id] || b.data.url || "" },
-        };
+        return { ...b, data: { ...b.data, url: imagePreviews[b.id] || b.data.url || "" } };
       }
       return b;
     });
@@ -948,30 +917,19 @@ export default function BlogEditorForm({
 
     try {
       if (blogId) {
-        await axiosInstance.put(
-          `${baseUrl}/blogs/${blogId}`,
-          formData,
-        );
+        await axiosInstance.put(`${baseUrl}/blogs/${blogId}`, formData);
         alert("✅ Blog updated successfully!");
       } else {
         formData.append("website", website);
-        const formDataEntries = Array.from(formData.entries());
-
-    // 2. Convert the array of [key, value] pairs into a single object.
-    const formDataObject = Object.fromEntries(formDataEntries);
-    
-    console.log("--- FormData Contents Before Submission ---");
-    console.log(formDataObject);
-        await axiosInstance.post(`${baseUrl}/blogs`, formData, {
-        });
+        await axiosInstance.post(`${baseUrl}/blogs`, formData);
         alert("✅ Blog created successfully!");
       }
     } catch (err) {
-      console.error("Error submitting blog:", err);
+      console.error(err);
       alert("Error submitting blog.");
     }
   };
-  // Helper to render the internal block content for both the list and the overlay
+
   const renderBlockContent = (block: Block) => (
     <>
       <BlockEditor
@@ -990,9 +948,10 @@ export default function BlogEditorForm({
 
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-6xl space-y-6 rounded-3xl bg-white p-8 shadow-lg">
+      {/* Title & Summary */}
       <input
         placeholder="Title"
-        className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800"
+        className="w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-800 font-semibold"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
@@ -1004,30 +963,49 @@ export default function BlogEditorForm({
         onChange={(e) => setSummary(e.target.value)}
       />
 
+      {/* Tags & Categories */}
       <div className="grid grid-cols-2 gap-4">
-        <input placeholder="Tags" className="w-full rounded-xl border p-3" value={tags} onChange={(e) => setTags(e.target.value)} />
-        <input placeholder="Categories" className="w-full rounded-xl border p-3" value={categories} onChange={(e) => setCategories(e.target.value)} />
+        <input placeholder="Tags (comma separated)" className="w-full rounded-xl border p-3 focus:ring-2 focus:ring-blue-400" value={tags} onChange={(e) => setTags(e.target.value)} />
+        <input placeholder="Categories (comma separated)" className="w-full rounded-xl border p-3 focus:ring-2 focus:ring-blue-400" value={categories} onChange={(e) => setCategories(e.target.value)} />
       </div>
 
-      {/* Block Controls */}
-      <div className="sticky top-0 z-50 flex flex-wrap gap-3 rounded-xl bg-white/90 p-3 shadow backdrop-blur-md">
+      {/* SEO Section */}
+      <div className="grid grid-cols-2 gap-4 border-t pt-4">
+        <input placeholder="Slug" className="w-full rounded-xl border p-3" value={slug} onChange={(e) => setSlug(e.target.value)} />
+        <input placeholder="Meta Title" className="w-full rounded-xl border p-3" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+        <textarea placeholder="Meta Description" className="col-span-2 w-full rounded-xl border p-3" value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+      </div>
+
+      {/* Meta Data & Cover */}
+      <div className="flex flex-wrap items-start gap-6 border-t pt-4">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Read Time (mins)</label>
+          <input className="w-full rounded-xl border p-3" value={estimatedReadTime} onChange={(e) => setEstimatedReadTime(e.target.value)} />
+        </div>
+        <div className="flex-1 min-w-[300px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+          <input type="file" accept="image/*" onChange={handleCoverChange} className="w-full text-sm text-gray-500" />
+          {coverPreview && (
+            <div className="relative mt-2 h-40 w-full rounded-lg overflow-hidden border shadow-inner">
+              <img src={coverPreview} alt="Cover Preview" className="object-contain w-full h-full" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sticky Block Adder */}
+      <div className="sticky top-0 z-50 flex flex-wrap gap-3 rounded-xl bg-white/90 p-3 shadow-md border border-blue-50 backdrop-blur-md">
         {blockOptions.map((opt) => (
-          <button key={opt.value} type="button" onClick={() => addBlock(opt.value)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <button key={opt.value} type="button" onClick={() => addBlock(opt.value)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
             + {opt.label}
           </button>
         ))}
       </div>
 
-      {/* Draggable Area */}
+      {/* Draggable Blocks */}
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-gray-700">Content Blocks</h3>
-        
-        <DndContext 
-          sensors={sensors} 
-          collisionDetection={closestCenter} 
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-4">
               {blocks.map((block) => (
@@ -1038,12 +1016,7 @@ export default function BlogEditorForm({
             </div>
           </SortableContext>
 
-          {/* This creates the floating ghost during drag */}
-          <DragOverlay dropAnimation={{
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: { active: { opacity: '0.5' } },
-            }),
-          }}>
+          <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } }) }}>
             {activeId ? (
               <SortableBlock id={activeId} isOverlay>
                 {renderBlockContent(blocks.find((b) => b.id === activeId)!)}
@@ -1053,7 +1026,7 @@ export default function BlogEditorForm({
         </DndContext>
       </div>
 
-      <button type="submit" className="w-full rounded-xl bg-green-600 px-6 py-3 text-lg font-semibold text-white hover:bg-green-700">
+      <button type="submit" className="w-full rounded-xl bg-green-600 px-6 py-4 text-xl font-bold text-white hover:bg-green-700 transition shadow-lg">
         Save Blog to Draft
       </button>
     </form>
