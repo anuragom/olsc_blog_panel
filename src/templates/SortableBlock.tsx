@@ -63,20 +63,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 "use client";
 
 import React from "react";
@@ -103,7 +89,7 @@ export function SortableBlock({ id, children, isOverlay }: Props) {
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging && !isOverlay ? 0.4 : 1, // Make the placeholder faint
+    opacity: isDragging && !isOverlay ? 0.4 : 1,
     zIndex: isOverlay ? 1000 : "auto",
   };
 
@@ -117,23 +103,22 @@ export function SortableBlock({ id, children, isOverlay }: Props) {
           : "shadow-sm border-gray-200"
       } ${isDragging && !isOverlay ? "bg-gray-100 border-dashed" : ""}`}
     >
-      {/* Hide handle interaction on the overlay ghost to prevent focus issues */}
+      {/* Drag Handle: Attributes and Listeners ONLY here */}
       <div
-        {...(!isOverlay ? { ...attributes, ...listeners } : {})}
-        className={`mt-1 text-gray-400 ${
-          isOverlay ? "cursor-grabbing" : "cursor-grab hover:text-blue-500"
-        }`}
+        {...attributes}
+        {...listeners}
+        className={`mt-1 text-gray-400 cursor-grab active:cursor-grabbing hover:text-blue-500 transition-colors`}
       >
         <MdDragIndicator size={24} />
       </div>
 
-      <div className="flex-1 w-full overflow-hidden pointer-events-none">
+      {/* Content Wrapper: pointer-events disabled ONLY while dragging */}
+      <div className={`flex-1 w-full overflow-hidden ${isDragging ? "pointer-events-none" : ""}`}>
         {children}
       </div>
     </div>
   );
 }
-
 
 
 
