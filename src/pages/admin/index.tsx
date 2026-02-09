@@ -57,6 +57,8 @@ const PERMISSION_TREE = [
               { id: "service:speed_trucking:write", label: "Speed Trucking: Edit", dependsOn: ["service:speed_trucking:read", "enquiry:edit"] },
               { id: "service:FTL:read", label: "FTL: View" },
               { id: "service:FTL:write", label: "FTL: Edit", dependsOn: ["service:FTL:read", "enquiry:edit"] },
+              { id: "service:3PL:read", label: "3PL: View" },
+              { id: "service:3PL:write", label: "3PL: Edit", dependsOn: ["service:3PL:read", "enquiry:edit"] },
               { id: "service:PTL:read", label: "PTL: View" },
               { id: "service:PTL:write", label: "PTL: Edit", dependsOn: ["service:PTL:read", "enquiry:edit"] },
               { id: "service:contact_us:read", label: "Contact us: View" },
