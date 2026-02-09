@@ -837,12 +837,12 @@ const blockOptions: { label: string; value: BlockType }[] = [
 
 export default function BlogEditorForm({
   blogId, title, setTitle, summary, setSummary, tags, setTags,
-  categories, setCategories, coverPreview, setCoverPreview,
-  blocks, setBlocks, estimatedReadTime, setEstimatedReadTime,
-  slug, setSlug, metaTitle, setMetaTitle, metaDescription, setMetaDescription,
+  categories, setCategories,
+  blocks, setBlocks, estimatedReadTime,
+  slug, metaTitle, metaDescription,
   website
 }: Props) {
-  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -893,13 +893,13 @@ export default function BlogEditorForm({
     setBlocks((prevBlocks) => prevBlocks.filter((b) => b.id !== _id));
   };
 
-  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
-    }
-  };
+  // const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     setCoverFile(file);
+  //     setCoverPreview(URL.createObjectURL(file));
+  //   }
+  // };
 
   const handleBlockFileSelect = (blockId: string, file: File) => {
     setImageFiles((prev) => ({ ...prev, [blockId]: file }));
