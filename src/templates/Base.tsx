@@ -17,7 +17,7 @@ const Base = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const baseUrl = "https://olscpanel.omlogistics.co.in/api";
 
   const fetchBlogs = async (page = 1, searchQuery: string | null = null) => {
     setLoading(true);
@@ -176,7 +176,7 @@ const Base = () => {
                       href={`/blog/${blog.slug}`}
                       className="mt-auto inline-block px-4 py-2 bg-[#001F39] text-white rounded-lg font-medium hover:bg-[#003366] transition-colors"
                     >
-                      Read Moress
+                      Read More
                     </Link>
                   </div>
                 </div>
