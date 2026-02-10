@@ -176,7 +176,7 @@ const Base = () => {
                       href={`/blog/${blog.slug}`}
                       className="mt-auto inline-block px-4 py-2 bg-[#001F39] text-white rounded-lg font-medium hover:bg-[#003366] transition-colors"
                     >
-                      Read More
+                      Read Moress
                     </Link>
                   </div>
                 </div>
