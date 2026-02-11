@@ -756,7 +756,7 @@ export default function BlogPreview({
   const [activeSection] = useState<string>("");
   const [recentBlogs, setRecentBlogs] = useState<RecentBlog[]>([]);
 
-  const baseUrl = "https://olscpanel.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";

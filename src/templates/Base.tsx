@@ -17,7 +17,7 @@ const Base = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
 
-  const baseUrl = "https://olscpanel.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
 
   const fetchBlogs = async (page = 1, searchQuery: string | null = null) => {
     setLoading(true);
