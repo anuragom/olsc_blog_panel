@@ -774,7 +774,7 @@ const BlogListingPanel = ({ website, onBack }: BlogListingPanelProps) => {
 
   const { userRole } = useAuth();
 
-  const baseUrl = "https://olscpanel.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
 
   const fetchBlogs = async (page = 1, searchQuery: string | null = null, currentStatusFilter: BlogStatusFilter = statusFilter) => {
     setLoading(true);

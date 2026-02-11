@@ -8,7 +8,7 @@ if (process.env.ANALYZE === "true") {
     console.warn("Bundle analyzer not available in production.");
   }
 }
-const backendHost = "olscpanel.omlogistics.co.in";
+const backendHost = process.env.NEXT_PUBLIC_API_BASE || "olscpanel.omlogistics.co.in";
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,

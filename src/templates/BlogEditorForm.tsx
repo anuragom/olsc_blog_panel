@@ -399,7 +399,7 @@ export default function BlogEditorForm({
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const baseUrl = "https://olscpanel.omlogistics.co.in/api";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
 
   // Pointer sensor with distance helps differentiate between a "click" to type and a "drag" to move
   const sensors = useSensors(

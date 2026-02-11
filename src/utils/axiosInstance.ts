@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create a single axios instance
 const axiosInstance = axios.create({
-  baseURL: "https://olscpanel.omlogistics.co.in/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api",
   withCredentials: true, // send cookies on every request
 });
 

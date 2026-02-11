@@ -30,7 +30,7 @@ export default function EditBlogPage() {
     website: string;
   } | null>(null);
 
-  const baseUrl = "https://olscpanel.omlogistics.co.in";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
   const currentWebsite = Array.isArray(website) ? website[0] : website; 
   
 
