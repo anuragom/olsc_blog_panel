@@ -179,15 +179,25 @@ export default function BlockEditor({
           />
           {block.data.url && (
             <div className="relative mt-2 h-60 w-full rounded-lg border shadow">
-    <Image
-      src={block.data.url}
-      alt="preview"
-      fill
-      className="object-cover rounded-lg"
-      unoptimized
-    />
-  </div>
+          <Image
+            src={block.data.url}
+            alt="preview"
+            fill
+            className="object-cover rounded-lg"
+            unoptimized
+          />
+        </div>
           )}
+          <div className="mt-3">
+          <label className="text-xs font-bold text-gray-500 uppercase">Image Alt Text (SEO)</label>
+          <input
+            type="text"
+            className="w-full rounded border border-blue-100 p-2 mt-1 focus:border-blue-400 outline-none"
+            placeholder="Describe the image for SEO..."
+            value={block.data.alt ?? ""}
+            onChange={(e) => handleDataChange("alt", e.target.value)}
+          />
+        </div>
           <input
             type="text"
             className="mt-2 w-full rounded border p-2"

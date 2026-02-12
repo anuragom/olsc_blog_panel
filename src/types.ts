@@ -31,6 +31,7 @@ export interface Block {
     items?: string[];
     style?: "ordered" | "unordered";
     url?: string;
+    alt?:string;
     caption?: string;
     language?: string;
     rows?: TableRow[];
