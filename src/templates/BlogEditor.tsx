@@ -22,6 +22,7 @@ interface BlogEditorProps {
   initialMetaTitle?: string;
   initialMetaDescription?: string;
   website?: string;
+  initialCoverImageAlt?: string;
 }
 
 export default function BlogEditor({
@@ -39,6 +40,7 @@ export default function BlogEditor({
   initialMetaTitle = "",
   initialMetaDescription = "",
   website,
+  initialCoverImageAlt = "",
 
 }: BlogEditorProps) {
   const [view, setView] = useState<"editor" | "preview">("editor");
@@ -61,6 +63,7 @@ export default function BlogEditor({
     initialMetaDescription,
   );
   const [websiteState] = useState(website || "");
+  const [coverImageAlt, setCoverImageAlt] = useState(initialCoverImageAlt);
   const topMarginClass = view === "preview" ? "mt-[70px]" : "mt-[35px]";
 if (!website) {
     return <p className="p-10 text-red-600">Error: Website context is required to load editor.</p>;
@@ -119,6 +122,8 @@ if (!website) {
           metaDescription={metaDescription}
           setMetaDescription={setMetaDescription}
           website={websiteState}
+          coverImageAlt={coverImageAlt}
+          setCoverImageAlt={setCoverImageAlt}
         />
       ) : (
         <BlogPreview

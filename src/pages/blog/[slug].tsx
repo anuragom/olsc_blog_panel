@@ -28,6 +28,7 @@ export default function EditBlogPage() {
     metaTitle: string;
     metaDescription: string;
     website: string;
+    coverImageAlt: string;
   } | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://olscpanel.omlogistics.co.in/api";
@@ -61,6 +62,7 @@ export default function EditBlogPage() {
           metaTitle: blog.metaTitle,
           metaDescription: blog.metaDescription,
           website: blog.website || currentWebsite,
+          coverImageAlt: blog?.coverImage?.alt || "",
         });
         setLoading(false);
       })
@@ -95,6 +97,7 @@ export default function EditBlogPage() {
           initialMetaTitle={initialData.metaTitle}
           initialMetaDescription={initialData.metaDescription}
           website={currentWebsite }
+          initialCoverImageAlt={initialData?.coverImageAlt || ""}
         />
       </div>
       <Footer />
