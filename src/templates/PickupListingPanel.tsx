@@ -18,9 +18,11 @@ import {
   HiRefresh,
   HiOutlineCalendar,
   HiOutlineTruck,
-  HiOutlineInformationCircle,
   HiOutlineMail,
-  HiOutlinePhone
+  HiOutlinePhone,
+  HiPlus,
+  HiOutlinePencilAlt,
+  HiOutlineChatAlt
 } from "react-icons/hi";
 import { FaRegBuilding } from "react-icons/fa";
 import { toast } from "react-hot-toast";
@@ -37,6 +39,15 @@ const DetailItem = ({ label, value, icon: Icon, highlight }: { label: string, va
     </span>
   </div>
 );
+
+
+interface Remark {
+  _id?: string;
+  text: string;
+  createdBy: string;
+  createdAt: string;
+  fullName: string;
+}
 
 interface PickupRequest {
   _id: string;
@@ -77,7 +88,7 @@ interface PickupRequest {
   status: string;
   processingStatus: string;
   processingError?: string;
-  remarks?: string;
+  remarks: Remark[];
   createdAt: string;
 }
 
@@ -98,6 +109,15 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+
+  const [activeInputId, setActiveInputId] = useState<string | null>(null);
+
+  // States for editing existing remarks
+  const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  // const [editValueAssignedTo, setEditValueAssignedTo] = useState("");
+
+  // const today = new Date().toISOString().split("T")[0];
 
   const canEditStatus = hasPermission("pickup:edit") || user?.role === "SuperAdmin";
   const canExport = hasPermission("pickup:export") || user?.role === "SuperAdmin";
@@ -144,20 +164,73 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
-  const handleTableRemarkUpdate = async (item: PickupRequest, newValue: string) => {
-    const originalValue = item.remarks || "";
-    if (newValue === originalValue) return;
-    if (!canEditStatus) return;
+  // const handleTableRemarkUpdate = async (item: PickupRequest, newValue: string) => {
+  //   const originalValue = item.remarks || "";
+  //   if (newValue === originalValue) return;
+  //   if (!canEditStatus) return;
+
+  //   setSavingId(item._id);
+  //   try {
+  //     await axiosInstance.put(`/forms/pickup/${item._id}`, { remarks: newValue });
+  //     setData(prev => prev.map(i => i._id === item._id ? { ...i, remarks: newValue } : i));
+  //     setSuccessId(item._id);
+  //     setTimeout(() => setSuccessId(null), 2000);
+  //     toast.success("Remarks Saved");
+  //   } catch (err) {
+  //     toast.error(`Failed to save remarks`);
+  //   } finally {
+  //     setSavingId(null);
+  //   }
+  // };
+
+  const canEditPickup = () => {
+    return user?.role === "SuperAdmin" || hasPermission(`pickup:edit`) || hasPermission("service:*:write");
+  };
+
+  const handleAddRemark = async (item: PickupRequest, newValue: string) => {
+    if (!newValue.trim()) {
+      setActiveInputId(null);
+      return;
+    }
+    if (!canEditPickup()) return;
 
     setSavingId(item._id);
     try {
-      await axiosInstance.put(`/forms/pickup/${item._id}`, { remarks: newValue });
-      setData(prev => prev.map(i => i._id === item._id ? { ...i, remarks: newValue } : i));
+      const response = await axiosInstance.put(`/forms/pickup/${item._id}`, { remarks: newValue });
+      const updatedPickup = response.data.data;
+
+      setData(prev => prev.map(i => i._id === item._id ? updatedPickup : i));
+      if (selectedPickup?._id === item._id) setSelectedPickup(updatedPickup);
+
       setSuccessId(item._id);
+      setActiveInputId(null);
+      toast.success("Remark Saved");
+
       setTimeout(() => setSuccessId(null), 2000);
-      toast.success("Remarks Saved");
     } catch (err) {
-      toast.error(`Failed to save remarks`);
+      toast.error(`Failed to add remark`);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleUpdateRemark = async (pickupId: string, remarkId: string, updatedText: string) => {
+    if (!updatedText.trim()) {
+      setEditingRemarkId(null);
+      return;
+    }
+    setSavingId(pickupId);
+    try {
+      const response = await axiosInstance.patch(`/forms/${pickupId}/remarks/${remarkId}`, { text: updatedText });
+      const updatedPickup = response.data.data;
+
+      setData(prev => prev.map(i => i._id === pickupId ? updatedPickup : i));
+      if (selectedPickup?._id === pickupId) setSelectedPickup(updatedPickup);
+
+      setEditingRemarkId(null);
+      toast.success("Remark Updated");
+    } catch (err) {
+      toast.error("Failed to update remark");
     } finally {
       setSavingId(null);
     }
@@ -168,25 +241,52 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
       toast.error("Unauthorized to export data");
       return;
     }
-    const headers = ["Date", "Consignor", "From Pincode", "Consignee", "To Pincode", "Weight", "Mode", "Status", "Remarks"];
-    const rows = data.map(item => [
-      new Date(item.createdAt).toLocaleDateString(),
-      `"${item.consignor_fullName.replace(/"/g, '""')}"`,
-      item.consignor_pinCode,
-      `"${item.consignee_fullName.replace(/"/g, '""')}"`,
-      item.consignee_pinCode,
-      item.product_totalWeight,
-      item.pickup_pickupMode,
-      item.status.toUpperCase(),
-      `"${(item.remarks || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`
-    ]);
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const baseHeaders = ["Date", "Consignor", "From Pincode", "Consignee", "To Pincode", "Weight", "Mode", "Status"];
+    const remarkHeaders = Array.from({ length: 20 }, (_, i) => `Remark ${i + 1}`);
+    const headers = [...baseHeaders, ...remarkHeaders];
+
+    const csvRows = data.map(item => {
+      const rowData = [
+        new Date(item.createdAt).toLocaleDateString(),
+        `"${item.consignor_fullName.replace(/"/g, '""')}"`,
+        item.consignor_pinCode,
+        `"${item.consignee_fullName.replace(/"/g, '""')}"`,
+        item.consignee_pinCode,
+        item.product_totalWeight,
+        item.pickup_pickupMode,
+        item.status.toUpperCase()
+      ];
+
+      const sortedRemarks = [...(item.remarks || [])].reverse();
+
+      for (let i = 0; i < 20; i++) {
+        const r = sortedRemarks[i];
+        if (r) {
+          const dateValue = r.createdAt ? new Date(r.createdAt) : new Date();
+          const timestamp = dateValue.toLocaleString('en-GB', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+          });
+          const rName = r.fullName || "N/A";
+          const rText = r.text || "";
+          const remarkString = `name : ${rName}, time: ${timestamp}, remarks: ${rText}`;
+          rowData.push(`"${remarkString.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+        } else {
+          rowData.push("");
+        }
+      }
+      return rowData.join(",");
+    });
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Pickup_Requests_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -306,20 +406,82 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                     </select>
                   </td>
                   <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
-                    <div className="relative flex items-center">
-                      <input
-                        type="text"
-                        defaultValue={item.remarks}
-                        onBlur={(e) => handleTableRemarkUpdate(item, e.target.value)}
-                        placeholder="Add log entry..."
-                        className={`w-full border-none rounded-xl px-4 py-2.5 text-xs font-bold transition-all placeholder:text-slate-300 shadow-sm
-                              ${successId === item._id ? 'bg-emerald-50 ring-2 ring-emerald-500 pr-10' : 'bg-slate-50 focus:ring-1 focus:ring-blue-500'}
-                            `}
-                      />
-                      <div className="absolute right-3">
-                        {savingId === item._id && <HiRefresh className="w-4 h-4 text-blue-500 animate-spin" />}
-                        {successId === item._id && <HiCheckCircle className="w-5 h-5 text-emerald-500" />}
+                    <div className="flex flex-col gap-3">
+                      {/* Remarks List View */}
+                      <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                        {item.remarks && item.remarks.length > 0 ? (
+                          [...item.remarks].reverse().map((rem, idx) => {
+                            const isOwner = user?.userId === rem.createdBy;
+                            const isEditing = editingRemarkId === rem._id;
+
+                            return (
+                              <div key={idx} className={`p-3 rounded-xl border border-slate-100 group/remark ${isOwner ? 'bg-blue-50/30' : 'bg-slate-50/80'}`}>
+                                <div className="flex UserDatajustify-between items-center mb-1">
+                                  <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter flex items-center gap-1">
+                                    {rem.fullName || 'User'} {isOwner && <HiOutlinePencilAlt size={10} className="text-slate-400" />}
+                                  </span>
+                                  <span className="text-[8px] text-blue-600 font-bold">{new Date(rem.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                {isOwner && isEditing && canEditPickup() ? (
+                                  <input
+                                    autoFocus
+                                    className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-1 ring-blue-500 rounded p-1"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleUpdateRemark(item._id, rem._id!, editValue);
+                                      if (e.key === 'Escape') setEditingRemarkId(null);
+                                    }}
+                                    onBlur={() => handleUpdateRemark(item._id, rem._id!, editValue)}
+                                  />
+                                ) : (
+                                  <p
+                                    onClick={() => { if (isOwner && rem._id) { setEditingRemarkId(rem._id); setEditValue(rem.text); } }}
+                                    className={`text-[11px] font-bold text-slate-600 leading-snug break-all ${isOwner ? 'cursor-edit hover:text-blue-600' : ''}`}
+                                  >
+                                    {rem.text}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <span className="text-[10px] text-slate-300 italic font-medium">No notes recorded</span>
+                        )}
                       </div>
+
+                      {canEditPickup() && (
+                        <>
+                          {activeInputId === item._id ? (
+                            <div className="relative">
+                              <input
+                                autoFocus
+                                type="text"
+                                placeholder="Type and press Enter..."
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleAddRemark(item, e.currentTarget.value);
+                                  if (e.key === 'Escape') setActiveInputId(null);
+                                }}
+                                onBlur={(e) => handleAddRemark(item, e.target.value)}
+                                className="w-full bg-white border-none rounded-xl px-4 py-2.5 text-xs font-bold ring-2 ring-blue-500 shadow-xl"
+                              />
+                              {savingId === item._id && <HiRefresh className="absolute right-3 top-3 w-4 h-4 text-blue-500 animate-spin" />}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setActiveInputId(item._id)}
+                              className="flex items-center gap-2 w-fit px-3 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-500 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest"
+                            >
+                              <HiPlus size={12} /> Add Remark
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {successId === item._id && (
+                        <div className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase animate-pulse">
+                          <HiCheckCircle /> Saved
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -348,7 +510,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setSelectedPickup(null)}></div>
           <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 overflow-y-auto">
-            
+
             {/* Modal Header */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-slate-100 p-8 flex justify-between items-center">
               <div>
@@ -361,7 +523,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
             </div>
 
             <div className="p-8 md:p-12 space-y-10">
-              
+
               {/* SECTION: CONSIGNOR (SENDER) */}
               <section>
                 <h4 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6">
@@ -373,7 +535,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                   </div> */}
                   <DetailItem label="Full Name" icon={IoIosPerson} value={selectedPickup.consignor_fullName} />
                   <DetailItem label="Company" icon={FaRegBuilding} value={selectedPickup.consignor_companyName} />
-                  
+
                   <DetailItem label="Contact Number" icon={HiOutlinePhone} value={selectedPickup.consignor_contactNo} />
                   <DetailItem label="Alt Contact" icon={HiOutlinePhone} value={selectedPickup.consignor_alternateContactNo} />
                   <div className="col-span-2">
@@ -416,7 +578,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                   <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
                     <DetailItem label="No. of Boxes" value={selectedPickup.product_numberOfBoxes} highlight="text-xl font-black text-slate-900" />
                   </div>
-                   <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
+                  <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
                     <DetailItem label="Box Size (L×B×H)" value={selectedPickup.product_boxLength ? `${selectedPickup.product_boxLength} × ${selectedPickup.product_boxBreadth} × ${selectedPickup.product_boxHeight}` : "Not Provided"} />
                   </div>
                   {/* <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
@@ -424,9 +586,9 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                   </div> */}
                   <DetailItem label="Material Type" value={selectedPickup.product_materialType} />
                   <DetailItem label="Freight Mode" value={selectedPickup.freight_mode} highlight="font-black text-emerald-600" />
-                  <DetailItem 
-                    label="Packaging" 
-                    value={selectedPickup.product_packagingType} 
+                  <DetailItem
+                    label="Packaging"
+                    value={selectedPickup.product_packagingType}
                   />
                 </div>
                 <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
@@ -470,21 +632,40 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
 
               {/* SECTION: REMARKS & ERRORS */}
               <section className="pb-20">
-                <div className="p-8 bg-emerald-50 rounded-[2rem] border border-emerald-100">
-                  <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">
-                    <HiOutlineInformationCircle size={16} /> Operations Log
-                  </h4>
-                  <p className="text-sm font-bold text-slate-700 italic leading-relaxed">
-                    "{selectedPickup.remarks || 'No internal remarks noted for this request.'}"
-                  </p>
-                  {selectedPickup.processingError && (
-                    <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-xl text-[10px] font-mono border border-red-200">
-                      SYSTEM_ERROR: {selectedPickup.processingError}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <HiOutlineChatAlt size={18} /> Administrative Log ({selectedPickup.remarks?.length || 0})
+                    </h4>
+                  </div>
+
+                  {selectedPickup.remarks && selectedPickup.remarks.length > 0 ? (
+                    <div className="space-y-4 relative before:absolute before:left-6 before:top-0 before:bottom-0 before:w-px before:bg-slate-100">
+                      {[...selectedPickup.remarks].reverse().map((rem, idx) => (
+                        <div key={idx} className="relative pl-12">
+                          <div className="absolute left-[20px] top-2 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white z-10"></div>
+                          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-[10px] font-black text-slate-900 uppercase">
+                                {rem?.fullName || "Staff"}
+                              </span>
+                              <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                                <HiOutlineClock />
+                                {new Date(rem.createdAt).toLocaleString()}
+                              </div>
+                            </div>
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed break-all whitespace-pre-wrap">
+                              {rem.text}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 p-8 rounded-[2rem] border border-dashed border-slate-200 text-center text-slate-400 italic text-xs font-bold">
+                      No administrative logs found.
                     </div>
                   )}
-                  <div className="mt-6 pt-6 border-t border-emerald-100 text-[10px] font-black uppercase text-emerald-400 tracking-[0.2em]">
-                    Created At: {new Date(selectedPickup.createdAt).toLocaleString()}
-                  </div>
                 </div>
               </section>
 
