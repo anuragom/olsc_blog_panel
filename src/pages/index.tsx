@@ -4,67 +4,73 @@ import { useAuth } from "@/utils/AuthContext";
 import Image from "next/image";
 
 export default function HomePage() {
-  // --- UPDATED: Use the 'user' object instead of 'userRole' ---
   const { user } = useAuth();
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[75vh] w-full overflow-hidden">
-
+    <div className="relative flex flex-col items-center justify-center min-h-[85vh] w-full overflow-hidden font-sans">
       
-      
-      {/* Background Ambient Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[120px] opacity-60 animate-pulse"></div>
+      {/* Background Ambient Glow - Matching the login panel's deep blue aesthetic subtly */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-100/30 rounded-full blur-[120px] opacity-40"></div>
 
-      <div className="relative z-10 flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <div className="relative z-10 flex flex-col items-center animate-in fade-in slide-in-from-bottom-12 duration-1000">
         
-        <div className="mb-8 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#0D5BAA] to-[#EE222F] p-[2px] mb-4 shadow-2xl">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-              <span className="text-xl font-bold text-[#0D5BAA]">
-                {/* --- UPDATED: Display initial of the actual fullName --- */}
-                {/* {user?.fullName?.charAt(0).toUpperCase() || "O"} */}
+        {/* The Branded Logo Box - Matching the Login Style but slightly smaller for the internal page */}
+        <div className="bg-white w-[450px] aspect-[30/10] rounded-[2.5rem] shadow-2xl mb-12 overflow-hidden flex items-center justify-center border-[8px] border-slate-50 transition-transform hover:scale-105 duration-500">
+          <Image 
+            src="/assets/Om.png" 
+            alt="Logo" 
+            width={600} 
+            height={600} 
+            className="object-contain scale-[1] transform-gpu" 
+            priority
+          />
+        </div>
 
-                    <Image 
-                      src="/assets/Om.png" 
-                      alt="OLSC Logo" 
-                      width={32} 
-                      height={32} 
-                      className="object-contain"
-                    />
-              </span>
-            </div>
-          </div>
-          
-          <div className="space-y-1 text-center">
-            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">
-              Authorized Session
-            </h2>
-            <p className="text-2xl font-light text-slate-800">
-              {/* --- UPDATED: Dynamic designation based on role name --- */}
-              {user?.role === 'SuperAdmin' ? 'System Administrator' : 'Panel Manager'}
-            </p>
+        {/* User Identity Section */}
+        <div className="space-y-2 text-center mb-8">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+            Secure Authorized Session
+          </h2>
+          <div className="inline-block px-4 py-1.5 bg-slate-900 rounded-xl shadow-lg">
+             <p className="text-xs font-black uppercase tracking-widest text-white">
+                {user?.role === 'SuperAdmin' ? 'System Administrator' : 'Panel Manager'}
+             </p>
           </div>
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-extralight text-slate-900 tracking-tighter mb-4">
-          {/* --- UPDATED: Personalized greeting --- */}
-          Welcome back, <span className="font-medium text-[#0D5BAA]">{user?.fullName.split(' ')[0]}</span>
-        </h1>
+        {/* Personalized Greeting */}
+        <div className="text-center">
+          <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter mb-4">
+            Welcome back, <span className="text-[#074B83]">{user?.fullName.split(' ')[0]}</span>
+          </h1>
 
-        <div className="flex items-center gap-4 w-full max-w-xs px-10 mb-10">
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-gray-200"></div>
-          <div className="w-1.5 h-1.5 rounded-full bg-[#EE222F] animate-ping"></div>
-          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-gray-200"></div>
+          {/* Branded System Name */}
+          <p className="text-xl md:text-2xl font-black text-slate-400 tracking-tight">
+            Enquiry Management System <span className="text-[#EE222F] italic ml-1">(EMS)</span>
+          </p>
         </div>
 
-        <p className="text-slate-400 font-medium text-sm uppercase tracking-widest animate-pulse">
-          Navigation Active
+        {/* Decorative Active Pulse Line */}
+        <div className="flex items-center gap-6 w-full max-w-md px-10 mt-12">
+          <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200"></div>
+          <div className="relative flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-[#EE222F]"></div>
+            <div className="absolute w-6 h-6 rounded-full border-2 border-[#EE222F] animate-ping opacity-20"></div>
+          </div>
+          <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-slate-200 to-slate-200"></div>
+        </div>
+
+        <p className="mt-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.5em] animate-pulse">
+          Centralized Platform Active
         </p>
       </div>
 
-      {/* Decorative elements */}
-      <div className="absolute bottom-10 left-10 w-20 h-[1px] bg-gray-200"></div>
-      <div className="absolute bottom-10 left-10 h-20 w-[1px] bg-gray-200"></div>
+      {/* Corporate Accent Elements */}
+      {/* <div className="absolute top-20 right-20 flex gap-4 text-[10px] font-black text-slate-200 uppercase tracking-widest pointer-events-none">
+        <span>Node_v2.04</span>
+        <span>•</span>
+        <span>Operational</span>
+      </div> */}
     </div>
   );
 }
