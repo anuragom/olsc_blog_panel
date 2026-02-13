@@ -4,42 +4,24 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 import { useAuth } from "@/utils/AuthContext";
 import {
-  HiOutlineArrowLeft,
+  HiX, HiOutlineArrowLeft,
+  HiOutlineSearch,
+  HiOutlineDownload, HiXCircle,
   HiChevronLeft,
   HiChevronRight,
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiX,
-  HiOutlineDownload,
-  HiOutlineLocationMarker,
-  HiOutlineCube,
-  HiOutlineClock,
-  HiCheckCircle,
   HiRefresh,
-  HiOutlineCalendar,
-  HiOutlineTruck,
+  HiOutlineChatAlt,
+  HiOutlineClock,
+  HiOutlineCube,
+  HiOutlineLocationMarker,
   HiOutlineMail,
   HiOutlinePhone,
-  HiPlus,
-  HiOutlinePencilAlt,
-  HiOutlineChatAlt
+  HiOutlineTruck,
+  HiOutlinePencilAlt
 } from "react-icons/hi";
-import { FaRegBuilding } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import { FaRegBuilding } from "react-icons/fa";
 import { IoIosPerson } from "react-icons/io";
-
-// Helper component for clean data rendering
-const DetailItem = ({ label, value, icon: Icon, highlight }: { label: string, value: any, icon?: any, highlight?: string }) => (
-  <div className="flex flex-col gap-1">
-    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1">
-      {Icon && <Icon size={12} />} {label}
-    </span>
-    <span className={`text-sm font-bold leading-tight ${highlight || 'text-slate-800'}`}>
-      {value || "—"}
-    </span>
-  </div>
-);
-
 
 interface Remark {
   _id?: string;
@@ -48,7 +30,6 @@ interface Remark {
   createdAt: string;
   fullName: string;
 }
-
 interface PickupRequest {
   _id: string;
   // Consignor Details
@@ -89,8 +70,10 @@ interface PickupRequest {
   processingStatus: string;
   processingError?: string;
   remarks: Remark[];
+  assigned_to: string;
   createdAt: string;
 }
+
 
 export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
   const { user, hasPermission } = useAuth();
@@ -109,16 +92,12 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
 
   const [savingId, setSavingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
-
   const [activeInputId, setActiveInputId] = useState<string | null>(null);
-
-  // States for editing existing remarks
-  const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
-  // const [editValueAssignedTo, setEditValueAssignedTo] = useState("");
+  const [editValueAssignedTo, setEditValueAssignedTo] = useState("");
 
   // const today = new Date().toISOString().split("T")[0];
-
+  const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
   const canEditStatus = hasPermission("pickup:edit") || user?.role === "SuperAdmin";
   const canExport = hasPermission("pickup:export") || user?.role === "SuperAdmin";
 
@@ -139,7 +118,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
       setData(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
-      toast.error("Error fetching pickup requests");
+      toast.error("Database connection failure");
     } finally {
       setLoading(false);
     }
@@ -151,89 +130,46 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
   }, [statusFilter, modeFilter, startDate, endDate, searchTerm]);
 
   const handleStatusUpdate = async (id: string, newStatus: string): Promise<void> => {
-    if (!canEditStatus) {
-      toast.error("Unauthorized to update status");
-      return;
-    }
+    if (!canEditStatus) return;
+    setSavingId(id);
     try {
       await axiosInstance.patch(`/forms/pickup/${id}/status`, { status: newStatus });
-      toast.success("Status Synchronized");
       setData(prev => prev.map(item => item._id === id ? { ...item, status: newStatus } : item));
+      toast.success(`STATUS: ${newStatus.toUpperCase()}`);
+      setSuccessId(id);
+      setTimeout(() => setSuccessId(null), 1500);
     } catch {
-      toast.error("Status update failed");
+      toast.error("Status Update Failed");
+    } finally {
+      setSavingId(null);
     }
-  };
-
-  // const handleTableRemarkUpdate = async (item: PickupRequest, newValue: string) => {
-  //   const originalValue = item.remarks || "";
-  //   if (newValue === originalValue) return;
-  //   if (!canEditStatus) return;
-
-  //   setSavingId(item._id);
-  //   try {
-  //     await axiosInstance.put(`/forms/pickup/${item._id}`, { remarks: newValue });
-  //     setData(prev => prev.map(i => i._id === item._id ? { ...i, remarks: newValue } : i));
-  //     setSuccessId(item._id);
-  //     setTimeout(() => setSuccessId(null), 2000);
-  //     toast.success("Remarks Saved");
-  //   } catch (err) {
-  //     toast.error(`Failed to save remarks`);
-  //   } finally {
-  //     setSavingId(null);
-  //   }
-  // };
-
-  const canEditPickup = () => {
-    return user?.role === "SuperAdmin" || hasPermission(`pickup:edit`) || hasPermission("service:*:write");
   };
 
   const handleAddRemark = async (item: PickupRequest, newValue: string) => {
-    if (!newValue.trim()) {
-      setActiveInputId(null);
-      return;
-    }
-    if (!canEditPickup()) return;
-
+    if (!newValue.trim()) { setActiveInputId(null); return; }
     setSavingId(item._id);
     try {
       const response = await axiosInstance.put(`/forms/pickup/${item._id}`, { remarks: newValue });
-      const updatedPickup = response.data.data;
-
-      setData(prev => prev.map(i => i._id === item._id ? updatedPickup : i));
-      if (selectedPickup?._id === item._id) setSelectedPickup(updatedPickup);
-
+      setData(prev => prev.map(i => i._id === item._id ? response.data.data : i));
+      if (selectedPickup?._id === item._id) setSelectedPickup(response.data.data);
       setSuccessId(item._id);
       setActiveInputId(null);
-      toast.success("Remark Saved");
-
+      toast.success("LOG ENTRY SAVED");
       setTimeout(() => setSuccessId(null), 2000);
-    } catch (err) {
-      toast.error(`Failed to add remark`);
-    } finally {
-      setSavingId(null);
-    }
+    } catch { toast.error(`Log Save Failed`); } finally { setSavingId(null); }
   };
 
+
   const handleUpdateRemark = async (pickupId: string, remarkId: string, updatedText: string) => {
-    if (!updatedText.trim()) {
-      setEditingRemarkId(null);
-      return;
-    }
+    if (!updatedText.trim()) { setEditingRemarkId(null); return; }
     setSavingId(pickupId);
     try {
-      const response = await axiosInstance.patch(`/forms/${pickupId}/remarks/${remarkId}`, { text: updatedText });
-      const updatedPickup = response.data.data;
-
-      setData(prev => prev.map(i => i._id === pickupId ? updatedPickup : i));
-      if (selectedPickup?._id === pickupId) setSelectedPickup(updatedPickup);
-
+      const response = await axiosInstance.patch(`/forms/pickup/${pickupId}/remarks/${remarkId}`, { text: updatedText });
+      setData(prev => prev.map(i => i._id === pickupId ? response.data.data : i));
+      if (selectedPickup?._id === pickupId) setSelectedPickup(response.data.data);
       setEditingRemarkId(null);
-      toast.success("Remark Updated");
-    } catch (err) {
-      toast.error("Failed to update remark");
-    } finally {
-      setSavingId(null);
-    }
+      toast.success("LOG UPDATED");
+    } catch { toast.error("Log Update Failed"); } finally { setSavingId(null); }
   };
 
   const downloadCSV = (): void => {
@@ -241,7 +177,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
       toast.error("Unauthorized to export data");
       return;
     }
-    const baseHeaders = ["Date", "Consignor", "From Pincode", "Consignee", "To Pincode", "Weight", "Mode", "Status"];
+    const baseHeaders = ["Date", "Consignor", "From Pincode", "Consignee", "To Pincode", "Weight", "Mode", "Status", "Assigned To"];
     const remarkHeaders = Array.from({ length: 20 }, (_, i) => `Remark ${i + 1}`);
     const headers = [...baseHeaders, ...remarkHeaders];
 
@@ -254,7 +190,8 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
         item.consignee_pinCode,
         item.product_totalWeight,
         item.pickup_pickupMode,
-        item.status.toUpperCase()
+        item.status.toUpperCase(),
+        item?.assigned_to || "Unassigned",
       ];
 
       const sortedRemarks = [...(item.remarks || [])].reverse();
@@ -282,257 +219,305 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Enquiries_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Pickup_Report_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
+  const canEditPickup = () => {
+    return user?.role === "SuperAdmin" || hasPermission(`pickup:edit`) || hasPermission("service:*:write");
+  };
+
+  const handleAssignedToChange = async (pickup: PickupRequest, newAssignedTo: string): Promise<void> => {
+    if (!canEditPickup()) {
+      toast.error("Unauthorized");
+      return;
+    }
+    try {
+      await axiosInstance.patch(`/forms/pickup/${pickup._id}/assignment`, { assigned_to: newAssignedTo });
+      toast.success(`Assigned To updated for ${pickup.consignor_fullName}`);
+      setData(prev => prev.map(item => item._id === pickup._id ? { ...item, assigned_to: newAssignedTo } : item));
+      if (selectedPickup?._id === pickup._id) setSelectedPickup({ ...selectedPickup, assigned_to: newAssignedTo });
+    } catch { toast.error("Failed to update Assigned To"); }
+  };
+
   return (
-    <div className="min-h-screen bg-white p-6 md:p-10 font-sans">
-      <div className="max-w-[1600px] mx-auto">
-        {/* Top Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+    <div className="min-h-screen bg-white font-sans text-slate-900 border-t-4 border-[#074B83]">
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; height: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        .table-fixed-layout { table-layout: fixed; width: 100%; }
+        .break-word-all { word-break: break-all; overflow-wrap: break-word; }
+      `}</style>
+
+      <div className="max-w-[1800px] mx-auto px-6 py-10">
+
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 border-b border-slate-100 pb-8 gap-6">
           <div>
-            <button onClick={onBack} className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all mb-4">
-              <HiOutlineArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Exit to Dashboard
+            <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-[#074B83] transition-colors mb-4">
+              <HiOutlineArrowLeft /> SYSTEM_DASHBOARD
             </button>
-            <h1 className="text-5xl font-black text-slate-900 tracking-tighter">
-              Pickup <span className="text-blue-600">Operations</span>
+            <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900 leading-none">
+              Pickup <span className="text-[#074B83]">Operations</span> <span className="text-[#EE222F] italic text-xl font-bold ml-2">(EMS)</span>
             </h1>
           </div>
 
           <div className="flex gap-4 w-full lg:w-auto">
-            {canExport && (
-              <button onClick={downloadCSV} className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
-                <HiOutlineDownload size={18} /> Export Data
-              </button>
-            )}
-            <div className="relative flex-1 lg:w-80">
-              <HiOutlineSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <div className="relative flex-1 lg:w-96">
+              <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
               <input
                 type="text"
-                placeholder="Search Consignor or Pincode..."
-                className="w-full pl-14 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                placeholder="SEARCH_CONSIGNOR / PINCODE..."
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 border-b-2 border-slate-100 text-xs font-bold uppercase outline-none focus:border-[#074B83] focus:bg-white transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            {canExport && (
+              <button onClick={downloadCSV} className="px-6 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#074B83] transition-all flex items-center gap-2">
+                <HiOutlineDownload /> EXPORT_DATA
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-6 mb-8 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
-          <div className="flex items-center gap-2 border-r border-slate-200 pr-6">
-            <HiOutlineFilter className="text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Logistics Filters</span>
+        {/* Filters Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-[1px] bg-slate-200 border border-slate-200 mb-10 shadow-sm">
+          <div className="bg-white p-4 flex flex-col">
+            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Transport Mode</span>
+            <select value={modeFilter} onChange={e => setModeFilter(e.target.value)} className="text-xs font-bold uppercase outline-none bg-transparent cursor-pointer">
+              <option value="">ALL_MODES</option>
+              <option value="Surface">Surface</option>
+              <option value="Express">Express</option>
+              <option value="Air">Air</option>
+              <option value="Train">Train</option>
+            </select>
           </div>
-
-          <select value={modeFilter} onChange={e => setModeFilter(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none cursor-pointer">
-            <option value="">All Transport Modes</option>
-            <option value="Surface">Surface</option>
-            <option value="Express">Express</option>
-            <option value="Air">Air</option>
-            <option value="Train">Train</option>
-          </select>
-
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="bg-transparent text-xs font-black uppercase text-slate-600 outline-none cursor-pointer">
-            <option value="">Lifecycle Status</option>
-            <option value="new">NEW REQUEST</option>
-            <option value="assigned">ASSIGNED</option>
-            <option value="picked">PICKED UP</option>
-            <option value="cancelled">CANCELLED</option>
-          </select>
-
-          <div className="flex items-center gap-4 ml-auto">
-            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white px-4 py-2 rounded-xl text-[10px] font-bold border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500" />
-            <span className="text-[10px] font-black text-slate-300 tracking-widest uppercase">To</span>
-            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-white px-4 py-2 rounded-xl text-[10px] font-bold border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500" />
+          <div className="bg-white p-4 flex flex-col">
+            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Operation Status</span>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-xs font-bold uppercase outline-none bg-transparent cursor-pointer">
+              <option value="">ALL_STATUS</option>
+              <option value="new">NEW</option>
+              <option value="assigned">ASSIGNED</option>
+              <option value="picked">PICKED UP</option>
+              <option value="cancelled">CANCELLED</option>
+            </select>
+          </div>
+          <div className="bg-white p-4 flex flex-col md:col-span-2 lg:col-span-2 relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Temporal Index (Expected)</span>
+              {(startDate || endDate) && (
+                <button onClick={() => { setStartDate(""); setEndDate(""); }} className="text-[9px] font-black text-[#EE222F] uppercase tracking-tighter hover:underline flex items-center gap-1">
+                  <HiXCircle size={12} /> Clear_Range
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="text-xs font-bold outline-none uppercase bg-transparent" />
+              <span className="text-slate-200 font-light">|</span>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="text-xs font-bold outline-none uppercase bg-transparent" />
+            </div>
+          </div>
+          <div className="bg-slate-50 p-4 flex items-center justify-center border-l border-slate-100 text-center">
+            {/* <div>
+               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Process Active</p>
+               <p className="text-[10px] font-bold text-[#074B83]">OPS_CENTER_V2</p>
+             </div> */}
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
-              <tr>
-                <th className="px-8 py-6">Pickup Date</th>
-                <th className="px-8 py-6">From/To</th>
-                <th className="px-8 py-6">Consignor</th>
-                <th className="px-8 py-6">Status</th>
-                <th className="px-8 py-6 w-1/4">Operations Remarks</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                <tr><td colSpan={5} className="py-20 text-center text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 animate-pulse">Initializing Data Stream...</td></tr>
-              ) : data.map((item) => (
-                <tr key={item._id} onClick={() => setSelectedPickup(item)} className="group hover:bg-blue-50/20 cursor-pointer transition-all">
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-black text-slate-900">{new Date(item.pickup_expectedDate).toLocaleDateString('en-GB')}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.pickup_pickupTime || 'Unscheduled'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                        <div className="w-px h-4 bg-slate-200"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-black text-slate-800">{item.consignor_pinCode}</span>
-                        <span className="text-[11px] font-black text-slate-800">{item.consignee_pinCode}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors uppercase">{item.consignor_fullName}</span>
-                  </td>
-                  <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
-                    <select
-                      value={item.status}
-                      onChange={e => handleStatusUpdate(item._id, e.target.value)}
-                      className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-lg outline-none ring-1 transition-all bg-white ${item.status === 'picked' ? 'bg-green-50 text-green-600 ring-green-200' :
-                        item.status === 'cancelled' ? 'bg-red-50 text-red-600 ring-red-200' : 'bg-blue-50 text-blue-600 ring-blue-200'
-                        }`}
-                    >
-                      <option value="new">NEW</option>
-                      <option value="assigned">ASSIGNED</option>
-                      <option value="picked">PICKED</option>
-                      <option value="cancelled">CANCELLED</option>
-                    </select>
-                  </td>
-                  <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
-                    <div className="flex flex-col gap-3">
-                      {/* Remarks List View */}
-                      <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
-                        {item.remarks && item.remarks.length > 0 ? (
-                          [...item.remarks].reverse().map((rem, idx) => {
-                            const isOwner = user?.userId === rem.createdBy;
-                            const isEditing = editingRemarkId === rem._id;
-
-                            return (
-                              <div key={idx} className={`p-3 rounded-xl border border-slate-100 group/remark ${isOwner ? 'bg-blue-50/30' : 'bg-slate-50/80'}`}>
-                                <div className="flex UserDatajustify-between items-center mb-1">
-                                  <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter flex items-center gap-1">
-                                    {rem.fullName || 'User'} {isOwner && <HiOutlinePencilAlt size={10} className="text-slate-400" />}
-                                  </span>
-                                  <span className="text-[8px] text-blue-600 font-bold">{new Date(rem.createdAt).toLocaleDateString()}</span>
-                                </div>
-                                {isOwner && isEditing && canEditPickup() ? (
-                                  <input
-                                    autoFocus
-                                    className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-1 ring-blue-500 rounded p-1"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleUpdateRemark(item._id, rem._id!, editValue);
-                                      if (e.key === 'Escape') setEditingRemarkId(null);
-                                    }}
-                                    onBlur={() => handleUpdateRemark(item._id, rem._id!, editValue)}
-                                  />
-                                ) : (
-                                  <p
-                                    onClick={() => { if (isOwner && rem._id) { setEditingRemarkId(rem._id); setEditValue(rem.text); } }}
-                                    className={`text-[11px] font-bold text-slate-600 leading-snug break-all ${isOwner ? 'cursor-edit hover:text-blue-600' : ''}`}
-                                  >
-                                    {rem.text}
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <span className="text-[10px] text-slate-300 italic font-medium">No notes recorded</span>
-                        )}
-                      </div>
-
-                      {canEditPickup() && (
-                        <>
-                          {activeInputId === item._id ? (
-                            <div className="relative">
-                              <input
-                                autoFocus
-                                type="text"
-                                placeholder="Type and press Enter..."
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleAddRemark(item, e.currentTarget.value);
-                                  if (e.key === 'Escape') setActiveInputId(null);
-                                }}
-                                onBlur={(e) => handleAddRemark(item, e.target.value)}
-                                className="w-full bg-white border-none rounded-xl px-4 py-2.5 text-xs font-bold ring-2 ring-blue-500 shadow-xl"
-                              />
-                              {savingId === item._id && <HiRefresh className="absolute right-3 top-3 w-4 h-4 text-blue-500 animate-spin" />}
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setActiveInputId(item._id)}
-                              className="flex items-center gap-2 w-fit px-3 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-500 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest"
-                            >
-                              <HiPlus size={12} /> Add Remark
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {successId === item._id && (
-                        <div className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase animate-pulse">
-                          <HiCheckCircle /> Saved
-                        </div>
-                      )}
-                    </div>
-                  </td>
+        <div className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="table-fixed-layout border-collapse">
+              <thead>
+                <tr className="bg-slate-900 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  <th className="px-6 py-4 border-r border-slate-800 w-[140px]">EXPECTED_DATE</th>
+                  <th className="px-6 py-4 border-r border-slate-800 w-[180px]">ROUTE (FROM/TO)</th>
+                  <th className="px-6 py-4 border-r border-slate-800 w-[180px]">CONSIGNOR</th>
+                  <th className="px-6 py-4 border-r border-slate-800 w-[140px]">LIFECYCLE</th>
+                  <th className="px-6 py-4 w-[350px]">OPERATIONS_REMARKS</th>
+                  <th className="px-8 py-6 w-[180px]">ASSIGNED TO</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr><td colSpan={5} className="py-20 text-center text-xs font-black uppercase tracking-[0.4em] text-[#074B83] animate-pulse">Establishing Ops Link...</td></tr>
+                ) : data.map((item) => (
+                  <tr key={item._id} onClick={() => setSelectedPickup(item)}
+                    className={`group hover:bg-slate-50 cursor-pointer border-l-4 border-transparent hover:border-l-[#074B83] transition-all
+                    ${successId === item._id ? 'bg-emerald-50/50 border-l-emerald-500' : ''}`}>
+                    <td className="px-6 py-6 border-r border-slate-50">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-slate-900 uppercase">
+                          {new Date(item.pickup_expectedDate).toLocaleDateString('en-GB')}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {item.pickup_pickupTime || 'UNSCHEDULED'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 border-r border-slate-50">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                          <div className="w-px h-4 bg-slate-200"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-black text-slate-900 font-mono tracking-tighter">P{item.consignor_pinCode}</span>
+                          <span className="text-[11px] font-black text-slate-900 font-mono tracking-tighter">D{item.consignee_pinCode}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 border-r border-slate-50">
+                      <span className="text-sm font-black text-slate-900 uppercase truncate break-word-all">{item.consignor_fullName}</span>
+                    </td>
+                    <td className="px-6 py-6 border-r border-slate-50" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-2">
+                        {canEditStatus ? (
+                          <select
+                            value={item.status}
+                            onChange={e => handleStatusUpdate(item._id, e.target.value)}
+                            className="text-[9px] font-black uppercase border border-slate-200 px-2 py-1 outline-none bg-white"
+                          >
+                            <option value="new">NEW</option>
+                            <option value="assigned">ASSIGNED</option>
+                            <option value="picked">PICKED</option>
+                            <option value="cancelled">CANCELLED</option>
+                          </select>
+                        ) : (
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.status}</span>
+                        )}
+                        {savingId === item._id && <HiRefresh className="animate-spin text-[#074B83] w-3 h-3" />}
+                      </div>
+                    </td>
+                    <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
+                      <div className="flex flex-col gap-2">
+                        <div className="max-h-[140px] overflow-y-auto custom-scrollbar pr-2">
+                          {item.remarks && Array.isArray(item.remarks) && item.remarks.length > 0 ? (
+                            [...item.remarks].reverse().map((rem, idx) => {
+                              const isOwner = user?.userId === rem.createdBy;
+                              return (
+                                <div key={idx} className="bg-slate-50 p-2 border-l-2 border-slate-300 mb-2 group/rem">
+                                  <div className="flex justify-between text-[8px] font-black uppercase text-slate-400 mb-1">
+                                    <span>{rem.fullName}</span>
+                                    <span>{new Date(rem.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                                  {editingRemarkId === rem._id ? (
+                                    <div className="flex items-center gap-2">
+                                      <input autoFocus className="w-full text-[11px] font-bold border-b border-blue-500 outline-none"
+                                        value={editValue} onChange={e => setEditValue(e.target.value)}
+                                        onBlur={() => handleUpdateRemark(item._id, rem._id!, editValue)}
+                                        onKeyDown={e => e.key === 'Enter' && handleUpdateRemark(item._id, rem._id!, editValue)} />
+                                      {savingId === item._id && <HiRefresh className="animate-spin text-blue-500 w-3 h-3" />}
+                                    </div>
+                                  ) : (
+                                    <p onClick={() => { if (isOwner) { setEditingRemarkId(rem._id!); setEditValue(rem.text); } }}
+                                      className={`text-[11px] font-bold text-slate-600 leading-tight break-word-all italic ${isOwner ? 'cursor-edit hover:text-blue-600' : ''}`}>
+                                      {rem.text}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : <span className="text-[10px] text-slate-300 font-bold uppercase italic">No Log Entry</span>}
+                        </div>
+                        <div className="mt-2">
+                          {activeInputId === item._id ? (
+                            <input autoFocus onKeyDown={e => e.key === 'Enter' && handleAddRemark(item, e.currentTarget.value)} onBlur={e => handleAddRemark(item, e.target.value)} placeholder="COMMIT_LOG..." className="w-full bg-slate-900 text-white text-[10px] font-black p-2 outline-none border-b-2 border-[#EE222F]" />
+                          ) : <button onClick={() => setActiveInputId(item._id)} className="text-[9px] font-black text-[#074B83] uppercase">+ NEW_ENTRY</button>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6" onClick={e => e.stopPropagation()}>
+                      {canEditPickup() ? (
+                        <div className="relative group/assign">
+                          {activeInputId === `${item._id}-assign` ? (
+                            <input
+                              autoFocus
+                              className="w-full bg-white text-[11px] font-bold text-slate-600 border-none ring-2 ring-blue-500 rounded-lg p-2 shadow-lg"
+                              value={editValueAssignedTo}
+                              onChange={(e) => setEditValueAssignedTo(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleAssignedToChange(item, editValueAssignedTo);
+                                  setActiveInputId(null);
+                                }
+                                if (e.key === 'Escape') {
+                                  setActiveInputId(null);
+                                  setEditValueAssignedTo("");
+                                }
+                              }}
+                              onBlur={() => {
+                                handleAssignedToChange(item, editValueAssignedTo);
+                                setActiveInputId(null);
+                              }}
+                              placeholder="Enter name..."
+                            />
+                          ) : (
+                            <div
+                              onClick={() => {
+                                setActiveInputId(`${item._id}-assign`);
+                                setEditValueAssignedTo(item?.assigned_to || "");
+                              }}
+                              className="flex items-center justify-between group-hover:bg-slate-50 p-2 rounded-lg transition-all cursor-text min-h-[32px]"
+                            >
+                              <span className={`text-[11px] font-bold ${item?.assigned_to ? 'text-slate-700' : 'text-slate-300 italic'}`}>
+                                {item?.assigned_to || "Click to assign..."}
+                              </span>
+                              <HiOutlinePencilAlt className="opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity" size={14} />
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                          {item?.assigned_to || "Unassigned"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
-        <div className="mt-10 flex items-center justify-between px-6 pb-10">
-          <div className="flex items-center gap-2">
-            <HiOutlineCalendar className="text-slate-300" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Total Requests: {pagination?.total}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 disabled:opacity-30 transition-all"><HiChevronLeft size={20} /></button>
-            <button disabled={pagination.page === pagination.totalPages} onClick={() => fetchData(pagination.page + 1)} className="p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 disabled:opacity-30 transition-all"><HiChevronRight size={20} /></button>
+        <div className="mt-8 flex items-center justify-between pt-6 border-t border-slate-100">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Global_Record_Count: {pagination.total}</span>
+          <div className="flex border border-slate-200">
+            <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-3 border-r border-slate-200 hover:bg-slate-50 disabled:opacity-20"><HiChevronLeft /></button>
+            <button disabled={pagination.page === pagination.totalPages} onClick={() => fetchData(pagination.page + 1)} className="p-3 hover:bg-slate-50 disabled:opacity-20"><HiChevronRight /></button>
           </div>
         </div>
       </div>
 
-      {/* DETAILED SIDEBAR MODAL */}
+      {/* Sidebar Modal */}
       {selectedPickup && (
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setSelectedPickup(null)}></div>
           <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 overflow-y-auto">
 
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-slate-100 p-8 flex justify-between items-center">
+            <div className="bg-slate-900 text-white p-8 flex justify-between items-center sticky top-0 z-10">
               <div>
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-1">Full Request Manifest</p>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter capitalize">{selectedPickup.consignor_fullName}</h2>
+                <p className="text-[9px] font-black tracking-[0.4em] text-slate-500 uppercase mb-1">{selectedPickup.consignor_fullName}</p>
+                <h2 className="text-2xl font-black uppercase tracking-tighter">Pickup Request</h2>
               </div>
-              <button onClick={() => setSelectedPickup(null)} className="p-3 bg-slate-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
-                <HiX size={24} />
-              </button>
+              <button onClick={() => setSelectedPickup(null)} className="hover:text-[#EE222F]"><HiX size={24} /></button>
             </div>
 
             <div className="p-8 md:p-12 space-y-10">
 
-              {/* SECTION: CONSIGNOR (SENDER) */}
               <section>
                 <h4 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6">
                   <HiOutlineLocationMarker size={18} /> Consignor Information
                 </h4>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                  {/* <div className="col-span-2">
-                    <DetailItem label="Full Name / Company" value={`${selectedPickup.consignor_fullName} ${selectedPickup.consignor_companyName ? `(${selectedPickup.consignor_companyName})` : ''}`} highlight="text-slate-900 text-base" />
-                  </div> */}
                   <DetailItem label="Full Name" icon={IoIosPerson} value={selectedPickup.consignor_fullName} />
                   <DetailItem label="Company" icon={FaRegBuilding} value={selectedPickup.consignor_companyName} />
 
@@ -581,9 +566,6 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
                   <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
                     <DetailItem label="Box Size (L×B×H)" value={selectedPickup.product_boxLength ? `${selectedPickup.product_boxLength} × ${selectedPickup.product_boxBreadth} × ${selectedPickup.product_boxHeight}` : "Not Provided"} />
                   </div>
-                  {/* <div className="p-6 border border-slate-100 rounded-3xl bg-white shadow-sm">
-                    <DetailItem label="Packaging" value={selectedPickup.product_packagingType} />
-                  </div> */}
                   <DetailItem label="Material Type" value={selectedPickup.product_materialType} />
                   <DetailItem label="Freight Mode" value={selectedPickup.freight_mode} highlight="font-black text-emerald-600" />
                   <DetailItem
@@ -676,3 +658,14 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
     </div>
   );
 };
+
+const DetailItem = ({ label, value, icon: Icon, highlight }: { label: string, value: any, icon?: any, highlight?: string }) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-1">
+      {Icon && <Icon size={12} />} {label}
+    </span>
+    <span className={`text-sm font-bold leading-tight ${highlight || 'text-slate-800'}`}>
+      {value || "—"}
+    </span>
+  </div>
+);
