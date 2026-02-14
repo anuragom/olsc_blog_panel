@@ -71,8 +71,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col animate-in fade-in duration-500">
-                <span className="font-black text-lg tracking-tighter leading-none">OLSC</span>
-                <span className="text-[10px] font-bold text-[#EE222F] uppercase tracking-[0.2em]">Panel</span>
+                <span className="font-black text-lg tracking-tighter leading-none">EMS</span>
+                <span className="text-[10px] font-bold text-[#EE222F] uppercase tracking-[0.2em]">Enquiry Management System</span>
               </div>
             )}
           </div>

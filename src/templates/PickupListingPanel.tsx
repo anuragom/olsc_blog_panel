@@ -99,7 +99,7 @@ export const PickupListingPanel = ({ onBack }: { onBack: () => void }) => {
   const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const canEditStatus = hasPermission("pickup:edit") || user?.role === "SuperAdmin";
-  const canExport = hasPermission("pickup:export") || user?.role === "SuperAdmin";
+  const canExport = hasPermission("pickup:edit") || user?.role === "SuperAdmin";
 
   const fetchData = async (page = 1) => {
     setLoading(true);

@@ -125,7 +125,7 @@ export const FormSelectionPanel = () => {
     { key: "retail_and_franchise", title: "Retail & Franchise", description: "Submission tracking and analytics for retail network.", requiredPermission: "retails:read", route: "/applications", icon: HiOutlineUserGroup },
     { key: "career", title: "Career Portal", description: "Recruitment data and employment inquiry processing.", requiredPermission: "career:read", route: "/careers", icon: HiOutlineClipboardList },
     { key: "institute", title: "Institute Management", description: "Om Institute joining and educational administration.", requiredPermission: "institute:read", route: "/institutes", icon: HiOutlineAcademicCap },
-    { key: "pickup", title: "Logistics Pickup", description: "Shipment logistics and pickup request data processing.", requiredPermission: "pickup:read", route: "/pickup", icon: HiOutlineTruck },
+    { key: "pickup", title: "Pickup Requests", description: "Om Logistics Pickup Requests", requiredPermission: "pickup:read", route: "/pickup", icon: HiOutlineTruck },
   ], []);
 
   const visibleForms = formConfig.filter(form => hasPermission(form.requiredPermission));
